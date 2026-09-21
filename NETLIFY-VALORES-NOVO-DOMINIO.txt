@@ -1,0 +1,60 @@
+RELPPS — VARIÁVEIS DO NETLIFY — NOVO DOMÍNIO
+================================================
+DOMÍNIO ATUAL:
+https://relppscosmeticooo.netlify.app
+
+COPIE NO NETLIFY > Project configuration > Environment variables
+
+[DOMÍNIO E CALLBACKS]
+PUBLIC_SITE_URL=https://relppscosmeticooo.netlify.app
+BLING_REDIRECT_URI=https://relppscosmeticooo.netlify.app/bling-callback.html
+MELHOR_ENVIO_CALLBACK_URL=https://relppscosmeticooo.netlify.app/melhor-envio-callback.html
+
+[INFINITEPAY]
+INFINITEPAY_HANDLE=rps210323
+INFINITEPAY_WEBHOOK=https://relppscosmeticooo.netlify.app/.netlify/functions/checkout?action=infinitepay-webhook
+
+[LOJA]
+STORE_POSTAL_CODE=72010901
+STORE_PICKUP_ADDRESS=C 12, Área Especial 02, Loja 30 — Taguatinga Centro, Brasília - DF — CEP 72010-901
+
+[CONFIGURAÇÕES]
+CHECKOUT_TEST_MODE=false
+BLING_CREATE_ORDERS=true
+MELHOR_ENVIO_SANDBOX=false
+UBER_DIRECT_ENABLED=true
+SUPABASE_URL=https://wsoetvctzybsdtsuydca.supabase.co
+
+[SEGREDOS INTERNOS]
+SHIPPING_QUOTE_SECRET=<usar o valor interno já definido no projeto>
+RELPPS_ADMIN_RELEASE_SECRET=<usar o valor interno já definido no projeto>
+BLING_OAUTH_STATE_SECRET=<usar o valor interno já definido no projeto>
+
+[CREDENCIAIS EXTERNAS — PREENCHER NO NETLIFY]
+BLING_CLIENT_ID=
+BLING_CLIENT_SECRET=
+BLING_REFRESH_TOKEN=
+
+SUPABASE_SERVICE_ROLE_KEY=
+
+MELHOR_ENVIO_CLIENT_ID=
+MELHOR_ENVIO_CLIENT_SECRET=
+MELHOR_ENVIO_TOKEN=
+
+UBER_DIRECT_CLIENT_ID=
+UBER_DIRECT_CLIENT_SECRET=
+UBER_DIRECT_CUSTOMER_ID=
+
+NÃO COLOQUE SEGREDOS NO HTML/JS DO FRONT-END E NÃO COMITE .env NO GIT.
+
+IMPORTANTE BLING:
+No aplicativo do Bling, o Redirect URI deve ser exatamente:
+https://relppscosmeticooo.netlify.app/bling-callback.html
+
+IMPORTANTE MELHOR ENVIO:
+O callback cadastrado deve ser exatamente:
+https://relppscosmeticooo.netlify.app/melhor-envio-callback.html
+
+IMPORTANTE INFINITEPAY:
+Webhook:
+https://relppscosmeticooo.netlify.app/.netlify/functions/checkout?action=infinitepay-webhook

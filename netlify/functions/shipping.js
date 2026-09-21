@@ -6,7 +6,7 @@ const SANDBOX='https://sandbox.melhorenvio.com.br';
 function json(statusCode,body,headers={}){return{statusCode,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...headers},body:JSON.stringify(body)}}
 function cleanCep(v){return String(v||'').replace(/\D/g,'').slice(0,8)}
 function base(){return process.env.MELHOR_ENVIO_SANDBOX==='true'?SANDBOX:PROD}
-function callback(){return String(process.env.MELHOR_ENVIO_CALLBACK_URL||'https://relppscosmeticoss.netlify.app/melhor-envio-callback.html').trim()}
+function callback(){return String(process.env.MELHOR_ENVIO_CALLBACK_URL||'https://relppscosmeticooo.netlify.app/melhor-envio-callback.html').trim()}
 function clientId(){return String(process.env.MELHOR_ENVIO_CLIENT_ID||'').trim()}
 function clientSecret(){return String(process.env.MELHOR_ENVIO_CLIENT_SECRET||'').trim()}
 function quoteSecret(){return String(process.env.SHIPPING_QUOTE_SECRET||process.env.RELPPS_ADMIN_RELEASE_SECRET||'').trim()}
