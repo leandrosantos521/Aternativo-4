@@ -1,0 +1,68 @@
+RELPPS — PACOTE DE ATUALIZAÇÃO 2026
+
+1. DOMÍNIO
+O site usa PUBLIC_SITE_URL no Netlify para gerar callbacks do Bling, InfinitePay e Melhor Envio.
+Ao trocar o domínio, altere PUBLIC_SITE_URL e as URLs de callback cadastradas nos respectivos provedores.
+Não é necessário editar dezenas de arquivos.
+
+2. BLING
+Variáveis necessárias no Netlify:
+BLING_CLIENT_ID
+BLING_CLIENT_SECRET
+BLING_REFRESH_TOKEN (ou conecte pelo OAuth do próprio site)
+BLING_CREATE_ORDERS=true
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+
+O catálogo usa os produtos reais do Bling. Produtos sem imagem ficam depois dos produtos com imagem.
+As imagens são carregadas primeiro diretamente do CDN/URL informado pelo Bling; se uma URL exigir acesso pelo servidor, o site usa o proxy da Function como fallback.
+O cadastro/login do Relpps também tenta associar o cliente ao contato existente no Bling por CPF/e-mail antes de criar outro contato.
+
+3. INFINITEPAY
+O checkout usa a API oficial:
+POST /links
+POST /payment_check
+e webhook.
+
+Variáveis:
+INFINITEPAY_HANDLE
+CHECKOUT_TEST_MODE=false
+PUBLIC_SITE_URL=https://SEU-DOMINIO
+
+No App/conta InfinitePay, o Checkout Integrado precisa estar habilitado e Pix + cartão de crédito precisam estar ativados.
+O cliente é enviado para o checkout da InfinitePay. O site não coleta número de cartão.
+
+4. UBER DIRECT
+Variáveis:
+UBER_DIRECT_ENABLED=true
+UBER_DIRECT_CLIENT_ID
+UBER_DIRECT_CLIENT_SECRET
+UBER_DIRECT_CUSTOMER_ID
+STORE_POSTAL_CODE
+STORE_PICKUP_ADDRESS
+STORE_PICKUP_PHONE
+
+Fluxo:
+CEP -> cotação real Uber Direct -> frete entra no total -> cliente paga -> pagamento aprovado -> pedido Uber Direct é criado automaticamente -> tracking_url aparece na página do pedido.
+
+O Client Secret fica somente no Netlify. Nunca coloque segredo no config.js do navegador.
+
+5. MELHOR ENVIO
+Variáveis:
+MELHOR_ENVIO_CLIENT_ID
+MELHOR_ENVIO_CLIENT_SECRET
+MELHOR_ENVIO_CALLBACK_URL
+MELHOR_ENVIO_TOKEN (se preferir token fixo)
+SHIPPING_QUOTE_SECRET
+
+6. FRONT-END
+- Categorias principais usam ícones elegantes.
+- Faixa de confiança removida.
+- Marcas circulares adicionadas com as imagens do ZIP de logos.
+- Seção Lançamentos adicionada e alimentada pelo catálogo Bling.
+- “Marcas em destaque” removida.
+- “Condição especial” removida.
+- Lâminas/agulhas ocultadas do catálogo.
+- Club Relpps continua funcionando, mas a apresentação pública foi ocultada, mantendo apenas os ícones.
+- Retirada e entrega receberam texto simplificado.
+- Pagamento e envio receberam uma área visual própria.
