@@ -11,7 +11,7 @@ Em **Netlify → Site configuration → Environment variables**, cadastre:
 ```text
 CHECKOUT_TEST_MODE=false
 BLING_CREATE_ORDERS=true
-PUBLIC_SITE_URL=https://relppscosmeticoss.netlify.app
+PUBLIC_SITE_URL=https://relppscosmeticooo.netlify.app
 STORE_POSTAL_CODE=72010901
 STORE_PICKUP_ADDRESS=C 12, Área Especial 02, Loja 30 — Taguatinga Centro, Brasília - DF — CEP 72010-901
 INFINITEPAY_HANDLE=rps210323
@@ -20,11 +20,11 @@ SUPABASE_SERVICE_ROLE_KEY=COLE_AQUI_A_SERVICE_ROLE_DO_SUPABASE
 BLING_CLIENT_ID=COLE_AQUI
 BLING_CLIENT_SECRET=COLE_AQUI
 BLING_REFRESH_TOKEN=DEIXE_VAZIO_SE_VAI_CONECTAR_PELA_TELA_OAUTH
-BLING_REDIRECT_URI=https://relppscosmeticoss.netlify.app/bling-callback.html
+BLING_REDIRECT_URI=https://relppscosmeticooo.netlify.app/bling-callback.html
 BLING_OAUTH_STATE_SECRET=CRIE_UMA_SENHA_FORTE_E_UNICA
 MELHOR_ENVIO_CLIENT_ID=COLE_AQUI
 MELHOR_ENVIO_CLIENT_SECRET=COLE_AQUI
-MELHOR_ENVIO_CALLBACK_URL=https://relppscosmeticoss.netlify.app/melhor-envio-callback.html
+MELHOR_ENVIO_CALLBACK_URL=https://relppscosmeticooo.netlify.app/melhor-envio-callback.html
 MELHOR_ENVIO_TOKEN=DEIXE_VAZIO_SE_USAR_OAUTH
 MELHOR_ENVIO_SANDBOX=false
 MELHOR_ENVIO_USER_AGENT=Relpps Cosméticos (contato@relpps.com.br)
@@ -51,17 +51,17 @@ No aplicativo Relpps, deixe os escopos necessários habilitados. Como você já 
 
 Depois de salvar os escopos, faça a autorização novamente por:
 
-`https://relppscosmeticoss.netlify.app/api/bling?action=authorize`
+`https://relppscosmeticooo.netlify.app/api/bling?action=authorize`
 
 Callback cadastrado no Bling:
 
-`https://relppscosmeticoss.netlify.app/bling-callback.html`
+`https://relppscosmeticooo.netlify.app/bling-callback.html`
 
 ### Webhook automático do frete Uber
 
 No Bling → Webhooks → Pedido de Venda → **Atualizado**, use:
 
-`https://relppscosmeticoss.netlify.app/.netlify/functions/bling-webhook-background`
+`https://relppscosmeticooo.netlify.app/.netlify/functions/bling-webhook-background`
 
 O webhook verifica a assinatura HMAC e, quando encontra um pedido Relpps de Uber com `transporte.frete > 0`, lê o pedido completo, calcula o total final e libera o checkout InfinitePay.
 
@@ -81,7 +81,7 @@ O site também mantém `/liberar-pedido.html` como caminho manual de contingênc
 
 Após publicar, abra:
 
-`https://relppscosmeticoss.netlify.app/api/health`
+`https://relppscosmeticooo.netlify.app/api/health`
 
 O endpoint retorna somente estados booleanos e avisos; não retorna chaves secretas.
 

@@ -2,7 +2,7 @@ RELPPS — VALIDAÇÃO FINAL
 Data: 17/09/2026
 
 OK — JavaScript: todos os .js passaram no node --check.
-OK — domínio antigo relppscosmeticoss.netlify.app: nenhuma ocorrência encontrada.
+OK — domínio antigo relppscosmeticooo.netlify.app: nenhuma ocorrência encontrada.
 OK — endpoint antigo /api/v2/me/ecommerce/calculate: nenhuma ocorrência encontrada.
 OK — Melhor Envio: endpoint atual /api/v2/me/shipment/calculate.
 OK — Correios: serviços solicitados 1 (PAC) e 2 (SEDEX).
