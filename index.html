@@ -77,7 +77,7 @@
     </div>
 
     <nav class="nav-bar" id="mainNav" aria-label="Categorias principais">
-      <a href="#produtos" data-area="">NOVIDADES</a>
+      <a href="#lancamentos">NOVIDADES</a>
       <div class="nav-mega">
         <button class="nav-mega-trigger" type="button" data-area="unhas">UNHAS <span class="nav-chevron" aria-hidden="true"></span></button>
         <div class="mega-panel mega-unhas">
@@ -178,14 +178,41 @@
       <div id="launchesGrid" class="product-grid launches-grid"></div>
     </section>
 
-    <section class="products-section container" id="produtos">
-      <div class="section-heading">
-        <div>
-          <span class="eyebrow">CATÁLOGO RELPPS</span>
-          <h2>Encontre seus produtos</h2>
-        </div>
-        <span class="catalog-count" id="catalogCount">Todos os produtos</span>
+    <section class="home-collections container" id="homeCollections" aria-label="Seleções de produtos">
+      <div class="home-collection-block" id="home-colas">
+        <div class="section-heading compact-home-heading"><div><span class="eyebrow">MAIS PROCURADOS</span><h2>Colas</h2><p>Adesivos e produtos para aplicação profissional de cílios.</p></div><button class="home-see-all" type="button" data-home-catalog>Ver todos os produtos →</button></div>
+        <div id="homeColasGrid" class="product-grid home-collection-grid"></div>
       </div>
+      <div class="home-collection-block" id="home-cilios">
+        <div class="section-heading compact-home-heading"><div><span class="eyebrow">CÍLIOS</span><h2>Cílios</h2><p>Fios, volumes e itens essenciais para extensão.</p></div><button class="home-see-all" type="button" data-home-catalog>Ver todos os produtos →</button></div>
+        <div id="homeCiliosGrid" class="product-grid home-collection-grid"></div>
+      </div>
+      <div class="home-collection-block" id="home-esmaltes">
+        <div class="section-heading compact-home-heading"><div><span class="eyebrow">UNHAS</span><h2>Esmaltes</h2><p>Cores e acabamentos para sua bancada.</p></div><button class="home-see-all" type="button" data-home-catalog>Ver todos os produtos →</button></div>
+        <div id="homeEsmaltesGrid" class="product-grid home-collection-grid"></div>
+      </div>
+      <div class="home-collection-block" id="home-sobrancelhas">
+        <div class="section-heading compact-home-heading"><div><span class="eyebrow">SOBRANCELHAS</span><h2>Sobrancelhas</h2><p>Henna, design, laminação e finalização.</p></div><button class="home-see-all" type="button" data-home-catalog>Ver todos os produtos →</button></div>
+        <div id="homeSobrancelhasGrid" class="product-grid home-collection-grid"></div>
+      </div>
+      <div class="home-collection-block" id="home-selecao">
+        <div class="section-heading compact-home-heading"><div><span class="eyebrow">SELEÇÃO RELPPS</span><h2>Essenciais da loja</h2><p>Uma seleção rápida para encontrar os produtos mais relevantes do catálogo.</p></div><button class="home-see-all" type="button" data-home-catalog>Ver todos os produtos →</button></div>
+        <div id="homeSelecaoGrid" class="product-grid home-collection-grid"></div>
+      </div>
+      <div class="home-all-products-cta">
+        <span class="eyebrow">CATÁLOGO COMPLETO</span>
+        <h2>Quer encontrar um produto específico?</h2>
+        <p>Acesse todos os produtos, busca, marcas, categorias e filtros em uma página exclusiva.</p>
+        <button class="btn btn-dark" type="button" data-home-catalog>VER TODOS OS PRODUTOS</button>
+      </div>
+    </section>
+
+    <section class="products-section catalog-page-section container hidden" id="produtos" aria-label="Todos os produtos">
+      <div class="catalog-page-topbar">
+        <div><span class="eyebrow">CATÁLOGO RELPPS</span><h2>Todos os produtos</h2><p>Pesquise por produto, marca, área ou categoria.</p></div>
+        <button class="catalog-back-home" id="catalogBackHome" type="button">← Voltar ao início</button>
+      </div>
+      <div class="section-heading catalog-heading-hidden"><div><h2>Encontre seus produtos</h2></div><span class="catalog-count" id="catalogCount">Todos os produtos</span></div>
       <div class="catalog-filters" aria-label="Filtros do catálogo">
         <div class="catalog-search">
           <span aria-hidden="true">⌕</span>
@@ -393,10 +420,9 @@
 
   <!-- Página dedicada do produto -->
   <section class="product-detail-page hidden" id="productPage" aria-hidden="true">
-    <header class="product-page-header">
-      <button class="product-page-back" id="productPageBack" type="button">← Voltar para os produtos</button>
-      <a class="product-page-brand logo-lockup page-home-logo" href="#inicio" aria-label="Voltar ao início"><img class="sales-logo-full" src="assets/relpps-logo-vendas-preta.png" alt="Relpps Cosméticos"></a>
-      <button class="product-page-cart" id="productPageCart" type="button">🛍️ <span>Meu carrinho</span><em id="productPageCartCount">0</em></button>
+    <header class="product-page-header internal-site-header">
+      <div class="internal-header-main"><button class="product-page-back" id="productPageBack" type="button">← Voltar</button><a class="product-page-brand page-home-logo" href="#inicio" aria-label="Relpps Cosméticos"><img src="assets/relpps-logo-header.png" alt="Relpps Cosméticos"></a><button class="product-page-cart" id="productPageCart" type="button">🛍️ <span>Meu carrinho</span><em id="productPageCartCount">0</em></button></div>
+      <nav class="internal-header-nav" aria-label="Navegação Relpps"><a href="#inicio">INÍCIO</a><a href="#lancamentos">LANÇAMENTOS</a><a href="#todos-produtos">TODOS OS PRODUTOS</a><a href="#atendimento">ATENDIMENTO</a></nav>
     </header>
     <main class="product-page-main">
       <button class="mobile-site-home" id="productPageHomeMobile" type="button">⌂ Voltar ao site</button>
@@ -456,10 +482,9 @@
   </section>
 
   <section class="full-cart-page hidden" id="cartPage" aria-hidden="true">
-    <header class="cart-page-header">
-      <button class="cart-page-back" id="cartPageBack" type="button">← Continuar comprando</button>
-      <a class="cart-page-brand logo-lockup page-home-logo" href="#inicio" aria-label="Voltar ao início"><img class="sales-logo-full" src="assets/relpps-logo-vendas-preta.png" alt="Relpps Cosméticos"></a>
-      <div class="cart-page-safe">🔒 Compra segura<br><small>Seus dados protegidos</small></div>
+    <header class="cart-page-header internal-site-header">
+      <div class="internal-header-main"><button class="cart-page-back" id="cartPageBack" type="button">← Continuar comprando</button><a class="cart-page-brand page-home-logo" href="#inicio" aria-label="Relpps Cosméticos"><img src="assets/relpps-logo-header.png" alt="Relpps Cosméticos"></a><div class="cart-page-safe">🔒 Compra segura<br><small>Seus dados protegidos</small></div></div>
+      <nav class="internal-header-nav" aria-label="Navegação Relpps"><a href="#inicio">INÍCIO</a><a href="#lancamentos">LANÇAMENTOS</a><a href="#todos-produtos">TODOS OS PRODUTOS</a><a href="#atendimento">ATENDIMENTO</a></nav>
     </header>
     <main class="cart-page-main">
       <div class="cart-page-title"><button class="mobile-site-home" id="cartPageHomeMobile" type="button">⌂ Voltar ao site</button>><span class="eyebrow">SEU PEDIDO</span><h1>Meu carrinho</h1><p>Revise seus produtos e escolha a melhor forma de receber.</p></div>
@@ -488,10 +513,9 @@
   </section>
 
   <section class="full-checkout-page hidden" id="checkoutModal" aria-hidden="true">
-    <header class="checkout-page-header">
-      <button class="checkout-page-back" id="checkoutPageBack" type="button">← Voltar ao carrinho</button>
-      <a class="checkout-page-brand logo-lockup page-home-logo" href="#inicio" aria-label="Voltar ao início"><img class="sales-logo-full" src="assets/relpps-logo-vendas-preta.png" alt="Relpps Cosméticos"></a>
-      <div class="checkout-page-safe">🔒 Compra segura<br><small>Dados protegidos e pedido seguro</small></div>
+    <header class="checkout-page-header internal-site-header">
+      <div class="internal-header-main"><button class="checkout-page-back" id="checkoutPageBack" type="button">← Voltar ao carrinho</button><a class="checkout-page-brand page-home-logo" href="#inicio" aria-label="Relpps Cosméticos"><img src="assets/relpps-logo-header.png" alt="Relpps Cosméticos"></a><div class="checkout-page-safe">🔒 Compra segura<br><small>Dados protegidos e pedido seguro</small></div></div>
+      <nav class="internal-header-nav" aria-label="Navegação Relpps"><a href="#inicio">INÍCIO</a><a href="#lancamentos">LANÇAMENTOS</a><a href="#todos-produtos">TODOS OS PRODUTOS</a><a href="#atendimento">ATENDIMENTO</a></nav>
     </header>
     <main class="checkout-page-main">
       <div class="checkout-page-title"><button class="mobile-site-home" id="checkoutPageHomeMobile" type="button">⌂ Voltar ao site</button>><span class="eyebrow">CHECKOUT RELPPS</span><h1>Finalize seu pedido</h1><p>Escolha como deseja receber e conclua sua compra com segurança.</p><div class="checkout-progress" aria-label="Etapas do checkout"><span class="active">1. Seus dados</span><i></i><span>2. Recebimento</span><i></i><span>3. Pagamento</span></div></div>
