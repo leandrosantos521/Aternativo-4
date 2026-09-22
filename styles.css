@@ -1893,3 +1893,73 @@ body.mobile-nav-open{overflow:hidden}
 
 /* Prevent blades/needles from appearing in the storefront UI. */
 [data-area="sobrancelhas"][data-category="laminas"]{display:none!important}
+
+/* =========================================================
+   RELPPS — catálogo separado + carregamento leve de imagens
+   ========================================================= */
+.home-collections{padding:28px 0 72px}
+.home-collection-block{padding:28px 0 10px}
+.compact-home-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:18px}
+.compact-home-heading h2{margin:5px 0 4px;font:600 clamp(28px,3vw,40px) "Playfair Display",serif;color:var(--brown-dark)}
+.compact-home-heading p{margin:0;color:var(--muted);font-size:12px}
+.home-see-all{border:0;background:transparent;color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.8px;padding:10px 0;white-space:nowrap}
+.home-see-all:hover{text-decoration:underline}
+.home-collection-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.home-product-card .product-actions{display:none}
+.home-product-card .product-image{min-height:260px}
+.home-all-products-cta{margin:48px 0 10px;padding:46px 28px;text-align:center;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,#fff,#faf6f1);box-shadow:0 18px 45px rgba(58,42,28,.06)}
+.home-all-products-cta h2{font:600 36px "Playfair Display",serif;color:var(--brown-dark);margin:8px 0}
+.home-all-products-cta p{color:var(--muted);font-size:13px;margin:0 auto 22px;max-width:600px}
+.catalog-page-section{padding:54px 0 80px;min-height:65vh}
+.catalog-page-topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:25px;margin-bottom:30px}
+.catalog-page-topbar h2{font:600 clamp(34px,4vw,50px) "Playfair Display",serif;color:var(--brown-dark);margin:7px 0}
+.catalog-page-topbar p{margin:0;color:var(--muted);font-size:13px}
+.catalog-back-home{border:1px solid var(--line);background:#fff;border-radius:999px;padding:12px 18px;color:var(--brown-dark);font-size:10px;font-weight:800;letter-spacing:.5px}
+.catalog-back-home:hover{border-color:var(--gold);color:var(--gold)}
+.catalog-heading-hidden{display:none}
+body.catalog-page-mode #inicio>section:not(#produtos){display:none!important}
+body.catalog-page-mode #produtos{display:block!important}
+body.catalog-page-mode .site-header{position:sticky;top:0}
+
+/* Mesmo cabeçalho preto da loja nas páginas de produto, carrinho e checkout. */
+.internal-site-header{background:#050505!important;color:#fff!important;border:0!important;box-shadow:0 10px 30px rgba(0,0,0,.16)!important;padding:0!important;position:sticky;top:0;z-index:2500}
+.internal-header-main{height:78px;display:grid;grid-template-columns:1fr 180px 1fr;align-items:center;gap:20px;width:min(1180px,calc(100% - 40px));margin:auto}
+.internal-header-main .product-page-brand,.internal-header-main .cart-page-brand,.internal-header-main .checkout-page-brand{justify-self:center;display:flex;align-items:center;justify-content:center;width:96px;height:62px}
+.internal-header-main .page-home-logo img{display:block;width:92px;height:62px;object-fit:contain}
+.internal-header-main .product-page-back,.internal-header-main .cart-page-back,.internal-header-main .checkout-page-back{justify-self:start;border:0;background:transparent;color:#fff;font-size:10px;font-weight:800;letter-spacing:.6px;padding:10px 0}
+.internal-header-main .product-page-back:hover,.internal-header-main .cart-page-back:hover,.internal-header-main .checkout-page-back:hover{color:var(--gold-light)}
+.internal-header-main .product-page-cart,.internal-header-main .cart-page-safe,.internal-header-main .checkout-page-safe{justify-self:end;color:#fff}
+.internal-header-main .product-page-cart{border:1px solid rgba(226,201,143,.38);background:transparent;color:#fff;border-radius:999px;padding:11px 15px;font-size:10px;font-weight:800}
+.internal-header-main .product-page-cart em{background:var(--gold);color:#fff}
+.internal-header-main .cart-page-safe,.internal-header-main .checkout-page-safe{text-align:right;font-size:10px;line-height:1.5}
+.internal-header-main .cart-page-safe small,.internal-header-main .checkout-page-safe small{color:rgba(255,255,255,.68)}
+.internal-header-nav{height:44px;display:flex;justify-content:center;align-items:center;gap:34px;border-top:1px solid rgba(255,255,255,.07);color:#fff}
+.internal-header-nav a{font-size:10px;font-weight:800;letter-spacing:.65px;color:#fff;transition:color .2s ease}
+.internal-header-nav a:hover{color:var(--gold-light)}
+
+/* Não reanimar toda a imagem a cada atualização do catálogo. */
+.product-image img,.home-product-card .product-image img{will-change:auto!important;backface-visibility:visible!important;transform:none!important;transition:opacity .22s ease!important}
+.product-image img[data-product-image-id],.home-product-card .product-image img[data-product-image-id]{background:#fff}
+
+@media(max-width:900px){
+  .home-collection-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .compact-home-heading{align-items:flex-start;flex-direction:column;gap:8px}
+  .home-see-all{padding-top:0}
+  .catalog-page-topbar{align-items:flex-start;flex-direction:column}
+  .catalog-back-home{width:100%}
+  .internal-header-main{height:72px;grid-template-columns:1fr 110px 1fr;width:calc(100% - 24px);gap:8px}
+  .internal-header-main .page-home-logo img{width:78px;height:54px}
+  .internal-header-main .product-page-cart span{display:none}
+  .internal-header-nav{height:40px;gap:16px;overflow:auto;justify-content:flex-start;padding:0 14px}
+  .internal-header-nav a{font-size:9px;white-space:nowrap}
+}
+@media(max-width:600px){
+  .home-collections{padding-top:18px}
+  .home-collection-block{padding-top:22px}
+  .home-product-card .product-image{min-height:220px}
+  .home-all-products-cta{padding:32px 18px;border-radius:18px}
+  .home-all-products-cta h2{font-size:28px}
+  .catalog-page-section{padding-top:32px}
+}
+/* Performance: remove repaints contínuos que deixavam o scroll pesado. */
+body::before,.site-header,.announcement span{animation:none!important}
