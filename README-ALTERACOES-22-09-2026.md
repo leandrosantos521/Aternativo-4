@@ -14,7 +14,7 @@
 - Removidas animações contínuas de repaint no fundo/cabeçalho para melhorar o desempenho ao rolar.
 - Mantida a imagem original do Bling sempre que disponível, com proxy apenas como fallback.
 - Página de produto, carrinho e checkout passaram a usar cabeçalho preto com a logo padrão da Relpps, mantendo a exceção do Club Relpps.
-- Domínio oficial mantido como `https://relppscosmeticooo.netlify.app`.
+- Domínio oficial mantido como `https://relppscos.netlify.app`.
 
 ## Testes feitos
 

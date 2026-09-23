@@ -1,15 +1,15 @@
 RELPPS — CONFIGURAÇÃO DO DOMÍNIO DE PRODUÇÃO
 
 DOMÍNIO
-https://relppscosmeticooo.netlify.app
+https://relppscos.netlify.app
 
-BLING_REDIRECT_URI=https://relppscosmeticooo.netlify.app/bling-callback.html
-MELHOR_ENVIO_CALLBACK_URL=https://relppscosmeticooo.netlify.app/melhor-envio-callback.html
-INFINITEPAY_WEBHOOK=https://relppscosmeticooo.netlify.app/.netlify/functions/checkout?action=infinitepay-webhook
-HEALTH=https://relppscosmeticooo.netlify.app/api/health
+BLING_REDIRECT_URI=https://relppscos.netlify.app/bling-callback.html
+MELHOR_ENVIO_CALLBACK_URL=https://relppscos.netlify.app/melhor-envio-callback.html
+INFINITEPAY_WEBHOOK=https://relppscos.netlify.app/.netlify/functions/checkout?action=infinitepay-webhook
+HEALTH=https://relppscos.netlify.app/api/health
 
 VALORES CONHECIDOS
-PUBLIC_SITE_URL=https://relppscosmeticooo.netlify.app
+PUBLIC_SITE_URL=https://relppscos.netlify.app
 INFINITEPAY_HANDLE=rps210323
 CHECKOUT_TEST_MODE=false
 BLING_CREATE_ORDERS=true

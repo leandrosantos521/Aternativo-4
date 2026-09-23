@@ -1,4 +1,4 @@
-const {createSaleOrder,setOrderSituation,situationId,findSaleOrderByStoreNumber,getSaleOrder,updateSaleOrderFreight}=require('./_lib/bling-client');
+const {createSaleOrder,setOrderSituation,situationId,discoverSalesOrderSituationId,findSaleOrderByStoreNumber,getSaleOrder,updateSaleOrderFreight}=require('./_lib/bling-client');
 const {getOrder,insertOrder,updateOrder,getCoupon,markCouponUsed}=require('./_lib/store');
 const crypto=require('crypto');
 const {createDelivery: createUberDelivery,quote: quoteUberDelivery}=require('./_lib/uber-direct');
@@ -6,7 +6,7 @@ const {createDelivery: createUberDelivery,quote: quoteUberDelivery}=require('./_
 function json(statusCode,body,headers={}){return{statusCode,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...headers},body:JSON.stringify(body)}}
 function orderId(){return `REL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`}
 function isProduction(){return process.env.CHECKOUT_TEST_MODE==='false'}
-function publicBaseUrl(){return String(process.env.PUBLIC_SITE_URL||'https://relppscosmeticooo.netlify.app').replace(/\/$/,'')}
+function publicBaseUrl(){return String(process.env.PUBLIC_SITE_URL||'https://relppscos.netlify.app').replace(/\/$/,'')}
 function storeConfigured(){return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)}
 function money(v){return Number(Number(v||0).toFixed(2));}
 function adminSecretOk(event,body={}){const expected=String(process.env.RELPPS_ADMIN_RELEASE_SECRET||'').trim(); const supplied=String(body.secret||event.headers?.['x-relpps-admin-secret']||event.headers?.['X-Relpps-Admin-Secret']||'').trim(); return Boolean(expected && supplied && supplied===expected);}
@@ -497,7 +497,7 @@ async function handleInfinitePayWebhook(event){
 
   let blingUpdated=null;
   if(order.bling_order_id){
-    const paidSituation=situationId('paid');
+    const paidSituation=situationId('paid') || await discoverSalesOrderSituationId('paid');
     if(paidSituation){try{blingUpdated=await setOrderSituation(order.bling_order_id,paidSituation)}catch(e){console.error('[Bling payment update]',e)}}
     await markBlingPaymentApproved(order.bling_order_id,{...payment,transaction_nsu:transactionNsu,slug});
   }
@@ -529,7 +529,7 @@ async function checkInfinitePayReturn(event){
     const paidAmount=Number(payment?.paid_amount ?? payment?.amount ?? 0);
     if(paidAmount>=expected && order.status!=='PAID'){
       if(order.bling_order_id){
-        const paidSituation=situationId('paid');
+        const paidSituation=situationId('paid') || await discoverSalesOrderSituationId('paid');
         if(paidSituation){try{await setOrderSituation(order.bling_order_id,paidSituation)}catch(e){console.error('[Bling return update]',e)}}
         await markBlingPaymentApproved(order.bling_order_id,{...payment,transaction_nsu:transactionNsu,slug});
       }
@@ -580,6 +580,16 @@ async function createUberForPaidOrder(id){
   const uber={quote_id:quoteId,delivery_id:delivery?.id||null,tracking_url:delivery?.tracking_url||delivery?.trackingUrl||null,status:delivery?.status||'created',raw:delivery,created_at:new Date().toISOString()};
   const raw={...(order.raw||{}),fulfillmentStatus:'Uber solicitado',uber};
   await safeUpdateOrder(id,{raw});
+  if(order.bling_order_id){
+    try{
+      const current=await getSaleOrder(order.bling_order_id);
+      if(current?.id){
+        const note=String(current.observacoesInternas||'').replace(/\s*\|\s*UBER_DIRECT_META:\{[^\n]*\}/,'').trim();
+        current.observacoesInternas=`${note}${note?' | ':''}Uber Moto solicitado | UBER_DIRECT_META:${JSON.stringify({quote_id:quoteId,delivery_id:uber.delivery_id,tracking_url:uber.tracking_url,status:uber.status})}`;
+        await require('./_lib/bling-client').blingFetch(`/pedidos/vendas/${encodeURIComponent(order.bling_order_id)}`,{method:'PUT',body:JSON.stringify(current)});
+      }
+    }catch(e){ console.warn('[Bling Uber] não foi possível registrar a entrega no pedido:',e.message); }
+  }
   return uber;
 }
 

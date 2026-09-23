@@ -10,7 +10,7 @@ const BRAND_ALIASES = {
   bluwe:["bluwe"],
   uzenails:["uzenails","uze nails","uze nail"],
   beautify:["beautify"],
-  bellamoca:["bela moca","bela moça","bellamoca","bela-moca"],
+  bellamoca:["bela moca","bela moça","bella moca","bella moça","bellamoca","bella-moca","bela-moca"],
   cherry:["cherry"],
   elitepremium:["elitepremium","elite premium"],
   skyrose:["skyrose","sky rose"],
@@ -804,6 +804,7 @@ function renderHomeCollections(){
   renderHomeCollection("homeColasGrid",visible.filter(p=>slug(`${p.name} ${p.category} ${p.description}` ).includes("cola")).slice(0,8),"Mais procurados");
   renderHomeCollection("homeCiliosGrid",visible.filter(p=>slug(p.area)==="cilios"||slug(`${p.name} ${p.category}` ).includes("cilio")).slice(0,8),"Cílios");
   renderHomeCollection("homeEsmaltesGrid",visible.filter(p=>slug(p.category)==="esmaltes"||slug(`${p.name} ${p.category}` ).includes("esmalte")).slice(0,8),"Esmaltes");
+  renderHomeCollection("homeGelsGrid",visible.filter(p=>slug(p.category)==="géis"||slug(p.category)==="geis"||/\bgel\b|builder|base coat|rubber/.test(slug(`${p.name} ${p.category} ${p.description}`))).slice(0,8),"Géis");
   renderHomeCollection("homeSobrancelhasGrid",visible.filter(p=>slug(p.area)==="sobrancelhas").slice(0,8),"Sobrancelhas");
   renderHomeCollection("homeSelecaoGrid",byStock.slice(0,8),"Seleção");
 }
@@ -811,17 +812,22 @@ function renderHomeCollections(){
 function renderLaunches(){
   const grid=$("#launchesGrid");
   if(!grid) return;
+  // A home mostra somente 7 lançamentos; o catálogo continua completo.
   const list=products
     .filter(p=>!isForbiddenStorefrontProduct(p?.raw||p))
-    .sort((a,b)=>productDateValue(b)-productDateValue(a)||String(b.id).localeCompare(String(a.id)))
-    .slice(0,8);
+    .sort((a,b)=>{
+      const stockA=Number(a.stock)>0?1:0, stockB=Number(b.stock)>0?1:0;
+      return stockB-stockA || productDateValue(b)-productDateValue(a) || String(b.id).localeCompare(String(a.id));
+    })
+    .slice(0,7);
   grid.innerHTML="";
-  list.forEach(p=>{
+  list.forEach((p,index)=>{
     const soldOut=Number(p.stock)<=0;
     const card=document.createElement("article");
-    card.className="product-card reveal-item";
+    card.className="product-card reveal-item launch-product-clickable";
+    card.style.setProperty("--reveal-delay",`${Math.min(index%4,3)*55}ms`);
     card.innerHTML=`
-      <button class="product-image product-detail-trigger" type="button" data-view="${p.id}" aria-label="Ver detalhes de ${p.name}">
+      <button class="product-image product-detail-trigger" type="button" data-view="${p.id}" aria-label="Ver detalhes de ${escapeHtml(p.name)}">
         <img src="${p.image||safeImageFallback()}" data-product-image-id="${p.id}" data-bling-src="${p.image||""}" alt="${p.name}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="if(this.dataset.proxyTried!=='1' && /^https?:/i.test(this.dataset.blingSrc||'')){this.dataset.proxyTried='1';this.src=blingImageFallbackUrl(this.dataset.blingSrc)}else{this.onerror=null;this.src=safeImageFallback()}">
         <span class="stock-dot">${soldOut?"Esgotado":"Lançamento"}</span>
       </button>
@@ -1078,7 +1084,7 @@ function getLoyalty(){try{return {...defaultLoyalty(),...(JSON.parse(localStorag
 function saveLoyalty(data){
   localStorage.setItem(loyaltyStorageKey(),JSON.stringify(data));
   // Mantém o navegador rápido e, quando o Supabase estiver configurado, espelha o saldo e os cupons na nuvem.
-  if(currentUser && cloudReady()) syncLoyaltyToCloud(data).catch(err=>console.warn("Falha ao sincronizar Club Relpps:",err));
+  if(currentUser && cloudReady()) syncLoyaltyToCloud(data).catch(err=>console.warn("Falha ao sincronizar Minha Relpps:",err));
 }
 async function syncLoyaltyToCloud(data){
   if(!currentUser || !cloudReady()) return;
@@ -1099,7 +1105,7 @@ async function loadLoyaltyFromCloud(){
   if(!currentUser || !cloudReady()) return getLoyalty();
   const local=getLoyalty();
   const club=await supabaseClient.from("clube_relpps").select("*").eq("user_id",currentUser.id).maybeSingle();
-  if(club.error){console.warn("Não foi possível carregar Club Relpps:",club.error);return local;}
+  if(club.error){console.warn("Não foi possível carregar Minha Relpps:",club.error);return local;}
   const coupons=await supabaseClient.from("clube_relpps_cupons").select("*").eq("user_id",currentUser.id).order("created_at",{ascending:false});
   if(coupons.error){console.warn("Não foi possível carregar cupons:",coupons.error);return local;}
   const remote=club.data?{points:Number(club.data.pontos)||0,welcomeGranted:Boolean(club.data.boas_vindas_concedidas),coupons:(coupons.data||[]).map(c=>({code:c.codigo,value:Number(c.valor)||0,used:Boolean(c.usado),createdAt:c.created_at,usedAt:c.used_at})),history:local.history||[]}:null;
@@ -1136,14 +1142,14 @@ function renderLoyaltyDashboard(){
   if(list)list.innerHTML=coupons.map(c=>`<span class="club-coupon-chip" title="Cupom de uso exclusivo">${escapeHtml(c.code)} · R$ ${Number(c.value).toLocaleString("pt-BR",{minimumFractionDigits:2})} OFF</span>`).join("");
   if(empty)empty.textContent=coupons.length?`${coupons.length} cupom(ns) disponível(is) para sua próxima compra.`:"Nenhum cupom resgatado ainda.";
 }
-function redeemLoyaltyReward(cost,value){if(!currentUser){toast("Entre na sua conta para resgatar benefícios do Club Relpps.");openAccount();return;}const data=getLoyalty();if((Number(data.points)||0)<cost){toast(`Você precisa de ${cost} pontos para esta recompensa.`);return;}data.points-=cost;const coupon={code:loyaltyCouponCode(),value:Number(value),used:false,createdAt:new Date().toISOString()};data.coupons=[coupon,...(data.coupons||[])];data.history=[...(data.history||[]),{type:"redeem",points:-cost,value:Number(value),code:coupon.code,date:new Date().toISOString()}];saveLoyalty(data);renderLoyaltyDashboard();renderMinhaRelppsPage();toast(`Cupom ${coupon.code} criado com sucesso!`);}
+function redeemLoyaltyReward(cost,value){if(!currentUser){toast("Entre na sua conta para resgatar benefícios do Minha Relpps.");openAccount();return;}const data=getLoyalty();if((Number(data.points)||0)<cost){toast(`Você precisa de ${cost} pontos para esta recompensa.`);return;}data.points-=cost;const coupon={code:loyaltyCouponCode(),value:Number(value),used:false,createdAt:new Date().toISOString()};data.coupons=[coupon,...(data.coupons||[])];data.history=[...(data.history||[]),{type:"redeem",points:-cost,value:Number(value),code:coupon.code,date:new Date().toISOString()}];saveLoyalty(data);renderLoyaltyDashboard();renderMinhaRelppsPage();toast(`Cupom ${coupon.code} criado com sucesso!`);}
 function updateAccountButton(){
   const btn=$("#accountBtn"); if(!btn)return;
   const logged=Boolean(currentUser);
   const rawName=logged ? (currentProfile?.name || currentUser?.email || "") : "";
   const firstName=rawName ? String(rawName).trim().split(/\s+/)[0] : "";
   const name=logged ? `Olá, ${firstName || "você"}` : "Olá! Faça login";
-  const sub=logged ? "Club Relpps" : "Ou cadastre-se";
+  const sub=logged ? "Minha Relpps" : "Ou cadastre-se";
   btn.querySelector("b").textContent=name;
   btn.querySelector("small").textContent=sub;
 }
@@ -1309,25 +1315,71 @@ function accountAddressText(a){
 
 function renderMinhaRelppsPage(){
   if(!currentUser)return;
-  const data=getLoyalty(), points=Number(data.points)||0, tier=loyaltyTier(points);
   const name=(currentProfile?.name||currentUser?.user_metadata?.name||"Cliente").trim().split(/\s+/)[0]||"Cliente";
-  const progress=tier.next?Math.max(0,Math.min(100,((points-tier.min)/(tier.next-tier.min))*100)):100;
   $("#minhaRelppsName") && ($("#minhaRelppsName").textContent=name);
-  $("#minhaRelppsTier") && ($("#minhaRelppsTier").textContent=tier.name);
-  $("#minhaRelppsPoints") && ($("#minhaRelppsPoints").textContent=`${points.toLocaleString("pt-BR")} ✦`);
-  $("#minhaRelppsProgress") && ($("#minhaRelppsProgress").textContent=tier.next?`${Math.max(0,tier.next-points).toLocaleString("pt-BR")} pontos para o próximo nível.`:"Você alcançou o nível máximo do Club Relpps.");
-  $("#minhaRelppsProgressBar") && ($("#minhaRelppsProgressBar").style.width=`${progress}%`);
-  $("#minhaRelppsNextTier") && ($("#minhaRelppsNextTier").textContent=tier.next?`${tier.name} → ${tier.next===5000?"Luxe":"Gold"} com ${tier.next.toLocaleString("pt-BR")} pontos.`:"Benefícios Luxe desbloqueados.");
   $("#minhaRelppsEmail") && ($("#minhaRelppsEmail").textContent=currentProfile?.email||currentUser?.email||"");
   $("#minhaRelppsAddress") && ($("#minhaRelppsAddress").innerHTML=accountAddressText(currentProfile));
-  const rewards=$("#minhaRelppsRewards");
-  if(rewards){rewards.innerHTML=[
-    [800,10,"Meta Essencial"],[2000,30,"Meta Gold"],[5000,90,"Meta Luxe"],[9000,180,"Benefício Signature"]
-  ].map(([cost,value,label])=>`<button type="button" class="club-reward-card minha-reward-card" data-reward-points="${cost}" data-reward-value="${value}" ${points<cost?"disabled":""}><b>${cost.toLocaleString("pt-BR")} ✦</b><span>R$ ${value} OFF</span><small>${label}</small></button>`).join("");}
-  const coupons=(data.coupons||[]).filter(c=>!c.used), list=$("#minhaRelppsCouponList"), empty=$("#minhaRelppsCouponEmpty");
-  if(list) list.innerHTML=coupons.length?coupons.map(c=>`<article class="minha-relpps-coupon-card"><span>CLUB RELPPS</span><b>${escapeHtml(c.code)}</b><strong>R$ ${Number(c.value).toLocaleString("pt-BR",{minimumFractionDigits:2})} OFF</strong><small>Disponível para usar no pagamento</small></article>`).join(""):"";
-  if(empty) empty.textContent=coupons.length?`${coupons.length} cupom(ns) disponível(is) para sua próxima compra.`:"Quando você conquistar ou resgatar um benefício, ele aparecerá aqui.";
 }
+
+async function openAccountDetailsFromMinha(){
+  const modal=$("#accountModal");
+  if(!modal)return;
+  if(cloudReady()) await loadProfile();
+  modal.classList.remove("hidden");
+  document.body.style.overflow="hidden";
+  $("#accountTitle") && ($("#accountTitle").textContent="Minha conta");
+  $("#loginForm")?.classList.add("hidden");
+  $("#registerForm")?.classList.add("hidden");
+  $("#accountSaved")?.classList.remove("hidden");
+  $("#savedName") && ($("#savedName").textContent=currentProfile?.name||currentUser?.user_metadata?.name||"Cliente");
+  $("#savedEmail") && ($("#savedEmail").textContent=currentProfile?.email||currentUser?.email||"");
+  $("#savedAddress") && ($("#savedAddress").innerHTML=accountAddressText(currentProfile));
+  renderLoyaltyDashboard();
+}
+
+function openMinhaRelppsAddressEditor(){
+  const modal=$("#minhaRelppsAddressModal");
+  if(!modal)return;
+  const a=currentProfile||{};
+  const values={cep:a.cep||"",address:a.address||"",number:a.number||"",complement:a.complement||"",district:a.district||"",city:[a.city,a.uf].filter(Boolean).join(" / ")};
+  Object.entries(values).forEach(([key,value])=>{const el=$("#minhaAddr"+key.charAt(0).toUpperCase()+key.slice(1));if(el)el.value=value;});
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+  requestAnimationFrame(()=>{
+    const first=$("#minhaAddrCep");
+    first?.focus();
+  });
+}
+
+async function saveMinhaRelppsAddress(e){
+  e.preventDefault();
+  if(!currentUser)return;
+  const data={
+    name:currentProfile?.name||currentUser?.user_metadata?.name||"",
+    cpf:currentProfile?.cpf||currentUser?.user_metadata?.cpf||"",
+    email:currentProfile?.email||currentUser?.email||"",
+    phone:currentProfile?.phone||currentUser?.user_metadata?.phone||"",
+    cep:$("#minhaAddrCep")?.value.trim()||"",
+    address:$("#minhaAddrAddress")?.value.trim()||"",
+    number:$("#minhaAddrNumber")?.value.trim()||"",
+    complement:$("#minhaAddrComplement")?.value.trim()||"",
+    district:$("#minhaAddrDistrict")?.value.trim()||"",
+    city:$("#minhaAddrCity")?.value.trim()||""
+  };
+  if(!data.cep||!data.address||!data.number||!data.district||!data.city){toast("Preencha CEP, endereço, número, bairro e cidade.");return;}
+  const btn=$("#minhaAddrSave"); if(btn)btn.disabled=true;
+  const ok=await persistProfile(data);
+  if(btn)btn.disabled=false;
+  if(ok){
+    await loadProfile();
+    $("#minhaRelppsAddressModal")?.classList.add("hidden");
+    $("#minhaRelppsAddressModal")?.setAttribute("aria-hidden","true");
+    renderMinhaRelppsPage();
+    toast("Novo endereço salvo com sucesso.");
+  }
+}
+
 async function openMinhaRelppsPage(){
   if(!currentUser){ $("#accountModal").classList.remove("hidden"); document.body.style.overflow="hidden"; return; }
   const page=$("#minhaRelppsPage");
@@ -1465,7 +1517,7 @@ async function handleRegister(e){
     await loadProfile();
     await syncBlingAccountContact(data);
     grantWelcomePoints();
-    $("#registerStatus").textContent="Conta criada e dados salvos na nuvem. Você ganhou 20 pontos de boas-vindas no Club Relpps.";
+    $("#registerStatus").textContent="Conta criada e dados salvos na nuvem. Você ganhou 20 pontos de boas-vindas no Minha Relpps.";
     if(pendingCheckout){
       pendingCheckout=false;
       closeModal("accountModal");
@@ -1474,7 +1526,7 @@ async function handleRegister(e){
     }else{
       closeModal("accountModal");
       await showWelcomeRelpps();
-      toast("Conta criada com sucesso. Bem-vinda ao Club Relpps!");
+      toast("Conta criada com sucesso. Bem-vinda ao Minha Relpps!");
     }
   }else{
     $("#registerStatus").textContent="Cadastro criado. Verifique seu e-mail para confirmar a conta e depois faça login para continuar a compra.";
@@ -1664,8 +1716,8 @@ function renderCartPageShipping(){
   if(cartPageReceiveMode==="pickup"){ updateCartPageTotals(); return; }
   const qs=[...(shippingQuotes.melhor_envio||[])].sort((a,b)=>shippingServiceRank(a)-shippingServiceRank(b)||Number(a.price||0)-Number(b.price||0));
   const opts=qs.map(q=>({provider:"melhor_envio",icon:"📦",title:`${q.company||"Correios"} — ${shippingServiceLabel(q)}`,sub:q.delivery_time?`${q.delivery_time} dias úteis`:"prazo não informado",q}));
-  opts.push({provider:"uber",icon:"🛵",title:"Uber / 99",sub:"A calcular — valor informado depois do pedido",q:{price:0,service:"uber_manual",id:"uber_manual",label:"Uber / 99 — A calcular",manual:true}});
-  if(!opts.length){box.innerHTML='<div class="cart-page-shipping-empty"><b>Informe seu CEP</b><br>O Melhor Envio será consultado em tempo real.</div><label class="cart-page-shipping-option uber-option"><input type="radio" name="cartPageShippingService" data-provider="uber" data-index="0"><span class="shipping-provider-mark">🛵</span><span><b>Uber / 99</b><small>A calcular — o valor será informado depois do pedido</small></span><strong>A calcular</strong></label>';box.querySelector('input[data-provider="uber"]')?.addEventListener('change',()=>{selectedShipping={provider:'uber',price:0,service:'uber_manual',id:'uber_manual',label:'Uber / 99 — A calcular',manual:true};updateCartPageTotals();});updateCartPageTotals();return;}
+  opts.push({provider:"uber",icon:"🛵",title:"Uber Moto",sub:"A calcular — valor informado depois do pedido",q:{price:0,service:"uber_manual",id:"uber_manual",label:"Uber Moto — A calcular",manual:true}});
+  if(!opts.length){box.innerHTML='<div class="cart-page-shipping-empty"><b>Informe seu CEP</b><br>O Melhor Envio será consultado em tempo real.</div><label class="cart-page-shipping-option uber-option"><input type="radio" name="cartPageShippingService" data-provider="uber" data-index="0"><span class="shipping-provider-mark">🛵</span><span><b>Uber Moto</b><small>A calcular — o valor será informado depois do pedido</small></span><strong>A calcular</strong></label>';box.querySelector('input[data-provider="uber"]')?.addEventListener('change',()=>{selectedShipping={provider:'uber',price:0,service:'uber_manual',id:'uber_manual',label:'Uber Moto — A calcular',manual:true};updateCartPageTotals();});updateCartPageTotals();return;}
   box.innerHTML=opts.map((o,i)=>{const isUber=o.provider==="uber";const checked=selectedShipping&&selectedShipping.provider===o.provider&&String(selectedShipping.id||selectedShipping.service)===String(o.q.id||o.q.service)?"checked":(!selectedShipping&&i===0?"checked":"");return `<label class="cart-page-shipping-option ${isUber?"uber-option":""}"><input type="radio" name="cartPageShippingService" data-provider="${o.provider}" data-index="${i}" ${checked}><span class="shipping-provider-mark">${o.icon}</span><span><b>${o.title}</b><small>${o.sub}</small></span><strong>${isUber?"A calcular":money(o.q.price)}</strong></label>`}).join("");
   box.querySelectorAll('input[name="cartPageShippingService"]').forEach(r=>r.addEventListener("change",()=>{
     const o=opts[Number(r.dataset.index)]; selectedShipping={provider:o.provider,...o.q,label:o.q.label||o.title,manual:o.provider==="uber"}; updateCartPageTotals();
@@ -1695,10 +1747,10 @@ function getAppliedCoupon(){return checkoutCoupon && !checkoutCoupon.used ? chec
 function applyCheckoutCoupon(){
   const input=$("#checkoutCouponCode"), status=$("#checkoutCouponStatus"); const code=String(input?.value||"").trim().toUpperCase();
   if(!code){checkoutCoupon=null;if(status)status.textContent="Nenhum cupom aplicado.";updateCheckoutTotals();return;}
-  if(!currentUser){toast("Entre na sua conta para usar um cupom do Club Relpps.");return;}
+  if(!currentUser){toast("Entre na sua conta para usar um cupom do Minha Relpps.");return;}
   const coupon=(getLoyalty().coupons||[]).find(c=>String(c.code).toUpperCase()===code&&!c.used);
   if(!coupon){checkoutCoupon=null;if(status)status.textContent="Código não encontrado ou já utilizado.";toast("Cupom inválido.");updateCheckoutTotals();return;}
-  checkoutCoupon={...coupon}; if(status)status.textContent=`Cupom aplicado: R$ ${Number(coupon.value).toLocaleString("pt-BR",{minimumFractionDigits:2})} OFF ✓`;toast("Cupom do Club Relpps aplicado!");updateCheckoutTotals();
+  checkoutCoupon={...coupon}; if(status)status.textContent=`Cupom aplicado: R$ ${Number(coupon.value).toLocaleString("pt-BR",{minimumFractionDigits:2})} OFF ✓`;toast("Cupom do Minha Relpps aplicado!");updateCheckoutTotals();
 }
 function couponAdjustedTotals(base){
   const c=getAppliedCoupon();
@@ -1759,7 +1811,7 @@ function updateDeliveryUI(){
     const q=shippingQuotes.melhor_envio?.[0];
     selectedShipping=q?{provider:"melhor_envio",...q,label:q.name||q.service||"Melhor Envio"}:{provider:"melhor_envio",price:0,service:"melhor_envio_pending",label:"Melhor Envio — informe o CEP",manual:true};
   }else{
-    selectedShipping={provider:"uber",service:"uber_manual",id:"uber_manual",label:"Uber / 99 — A calcular",price:0,manual:true};
+    selectedShipping={provider:"uber",service:"uber_manual",id:"uber_manual",label:"Uber Moto — A calcular",price:0,manual:true};
   }
   renderShippingQuotes();
   renderPaymentOptions(method);
@@ -1770,8 +1822,8 @@ function renderPaymentOptions(method){
   const note=$("#paymentNote");
   if(method==="uber") {
     checkoutPayment="pending";
-    box.innerHTML='<label class="payment-option"><input type="radio" name="payment" value="pending" checked><span><b>Pagamento após a cotação</b><small>O total com Uber Direct será confirmado antes do pagamento.</small></span></label><div class="payment-detail-body"><div class="checkout-uber-highlight"><strong>Uber Direct calculado pelo CEP</strong><p>O valor do frete entra no total. O pedido só é enviado para o Uber depois que o pagamento for aprovado.</p></div></div>';
-    if(note) note.textContent="O Uber Direct calcula o frete antes do pagamento. Depois da aprovação, a entrega é solicitada automaticamente.";
+    box.innerHTML='<label class="payment-option"><input type="radio" name="payment" value="pending" checked><span><b>Pagamento após a cotação</b><small>O total com Uber Direct será confirmado antes do pagamento.</small></span></label><div class="payment-detail-body"><div class="checkout-uber-highlight"><strong>Uber Moto calculado pelo CEP</strong><p>O valor do frete entra no total. O pedido só é enviado para o Uber depois que o pagamento for aprovado.</p></div></div>';
+    if(note) note.textContent="O Uber Moto calcula o frete antes do pagamento. Depois da aprovação, a entrega é solicitada automaticamente.";
     return;
   }
   let current=checkoutPayment || $("input[name=payment]:checked")?.value || null;
@@ -1824,7 +1876,7 @@ function applyShippingQuoteData(data){
   if(method==="melhor_envio" && shippingQuotes.melhor_envio.length){
     const q=shippingQuotes.melhor_envio[0]; selectedShipping={provider:"melhor_envio",...q,label:q.name||q.service||"Melhor Envio"};
   }else if(method==="uber" && shippingQuotes.uber){
-    selectedShipping={provider:"uber",...shippingQuotes.uber,label:"Uber Direct",manual:false};
+    selectedShipping={provider:"uber",...shippingQuotes.uber,label:"Uber Moto",manual:false};
   }
   renderShippingQuotes(); updateCheckoutTotals();
 }
@@ -1842,9 +1894,9 @@ async function quoteShipping(){
     if(method==="melhor_envio" && !data.melhor_envio.length) throw new Error("Nenhuma opção do Melhor Envio foi encontrada para este CEP.");
     if(method==="uber" && !data.uber) throw new Error(data?.uber_error||"O Uber Direct não retornou uma cotação para este endereço.");
     applyShippingQuoteData(data);
-    if(note) note.textContent=method==="uber"?"Uber Direct cotado em tempo real. Revise o valor antes de pagar.":"Frete calculado em tempo real pelo Melhor Envio. Escolha uma opção abaixo.";
+    if(note) note.textContent=method==="uber"?"Uber Moto cotado em tempo real. Revise o valor antes de pagar.":"Frete calculado em tempo real pelo Melhor Envio. Escolha uma opção abaixo.";
   }catch(e){
-    selectedShipping=method==="uber"?{provider:"uber",price:0,service:"uber_pending",label:"Uber Direct — calcular novamente",manual:true}:{provider:"melhor_envio",price:0,service:"melhor_envio_pending",label:"Melhor Envio — A calcular",manual:true};
+    selectedShipping=method==="uber"?{provider:"uber",price:0,service:"uber_pending",label:"Uber Moto — calcular novamente",manual:true}:{provider:"melhor_envio",price:0,service:"melhor_envio_pending",label:"Melhor Envio — A calcular",manual:true};
     renderShippingQuotes(); updateCheckoutTotals(); if(note) note.textContent=e.message||"Não foi possível calcular o frete."; toast(e.message||"Não foi possível calcular o frete.");
   }
 }
@@ -1854,9 +1906,9 @@ function renderShippingQuotes(){
   if(isPickupMethod(method)){ const uberPickup=method==="pickup_uber"; panel.innerHTML=`<div class="shipping-pickup"><b>${uberPickup?"🛵 Retirada via Uber / 99":"🏪 Retirada presencial"}</b><span>${uberPickup?"Sem CEP e sem frete. Após o pagamento e a liberação da loja, abra Uber ou 99 por sua conta.":"Sem frete. Pix ou Cartão reservam o pedido; Dinheiro é pago somente na loja."}</span></div>`; return; }
   if(method==="uber"){
     const q=shippingQuotes.uber;
-    if(!q){ selectedShipping={provider:"uber",price:0,service:"uber_pending",label:"Uber Direct — informe o CEP",manual:true}; panel.innerHTML=`<div class="shipping-provider-title">Uber Direct</div><div class="shipping-empty"><b>Informe o CEP e clique em CALCULAR FRETE</b><span>O valor será calculado em tempo real pela Uber Direct.</span></div>`; return; }
-    selectedShipping={provider:"uber",...q,label:"Uber Direct",manual:false};
-    panel.innerHTML=`<div class="shipping-provider-title">Uber Direct</div><div class="shipping-options"><label class="shipping-option"><input type="radio" name="shippingService" value="uber" checked><span class="shipping-provider-mark">🛵</span><span><b>Uber Direct</b><small>${q.eta?`Estimativa: ${q.eta}`:"Entrega sob demanda"}</small></span><strong>${money(q.price)}</strong></label></div><div class="uber-checkout-notice"><b>Frete calculado</b><span>O valor da Uber Direct entra no total e no Pedido de Venda do Bling. Depois do pagamento aprovado, o Uber é solicitado automaticamente.</span></div>`;
+    if(!q){ selectedShipping={provider:"uber",price:0,service:"uber_pending",label:"Uber Moto — informe o CEP",manual:true}; panel.innerHTML=`<div class="shipping-provider-title">Uber Moto</div><div class="shipping-empty"><b>Informe o CEP e clique em CALCULAR FRETE</b><span>O valor será calculado em tempo real pela Uber Direct.</span></div>`; return; }
+    selectedShipping={provider:"uber",...q,label:"Uber Moto",manual:false};
+    panel.innerHTML=`<div class="shipping-provider-title">Uber Moto</div><div class="shipping-options"><label class="shipping-option"><input type="radio" name="shippingService" value="uber" checked><span class="shipping-provider-mark">🛵</span><span><b>Uber Moto</b><small>${q.eta?`Estimativa: ${q.eta}`:"Entrega sob demanda"}</small></span><strong>${money(q.price)}</strong></label></div><div class="uber-checkout-notice"><b>Frete calculado</b><span>O valor do Uber Moto entra no total e no Pedido de Venda do Bling. Depois do pagamento aprovado, o Uber é solicitado automaticamente.</span></div>`;
     return;
   }
   const qs=shippingQuotes.melhor_envio||[];
@@ -1944,7 +1996,7 @@ async function submitOrder(form){
   checkoutPayment=data.payment;
   if(!isPickupMethod(method) && (!data.cep||!data.address||!data.number||!data.city)){toast("Preencha o endereço de entrega.");return;}
   if(!isPickupMethod(method) && method==="melhor_envio" && (!selectedShipping || selectedShipping.provider!=="melhor_envio" || Number(selectedShipping.price||0)<=0 || !selectedShipping.quote_token)){toast("Calcule e escolha uma opção do Melhor Envio antes de pagar.");return;}
-  if(method==="uber" && (!selectedShipping || selectedShipping.provider!=="uber" || Number(selectedShipping.price||0)<=0 || !selectedShipping.quote_token)){toast("Calcule e escolha o Uber Direct antes de pagar.");return;}
+  if(method==="uber" && (!selectedShipping || selectedShipping.provider!=="uber" || Number(selectedShipping.price||0)<=0 || !selectedShipping.quote_token)){toast("Calcule e escolha o Uber Moto antes de pagar.");return;}
   const totalsFinal=updateCheckoutTotals();
   const payload={
     status:"Aguardando pagamento",customer:{name:data.name,cpf:data.cpf,email:data.email,phone:data.phone},
@@ -2107,7 +2159,7 @@ function ensureMobileNav(){
     <button type="button" class="mobile-nav-item" data-mobile-area="cilios"><span>✦</span><div><b>Cílios</b><small>Fios, colas e finalizadores</small></div><i>→</i></button>
     <button type="button" class="mobile-nav-item" data-mobile-area="sobrancelhas"><span>✦</span><div><b>Sobrancelhas</b><small>Henna, design e brow</small></div><i>→</i></button>
     <button type="button" class="mobile-nav-item" data-mobile-area="equipamentos"><span>✦</span><div><b>Equipamentos</b><small>Cabines, luzes e ferramentas</small></div><i>→</i></button>
-    <button type="button" class="mobile-nav-club" data-mobile-club>✦ CLUB RELPPS <small>Programa de fidelidade</small></button>
+    <button type="button" class="mobile-nav-club" data-mobile-club>✦ MINHA RELPPS <small>Programa de fidelidade</small></button>
   </aside>`;
   document.body.appendChild(panel);
   panel.addEventListener("click",e=>{ if(e.target.closest("[data-mobile-close]")) closeMobileNav(); const item=e.target.closest("[data-mobile-area]"); if(item) selectCatalogPath(item.dataset.mobileArea,"",true); if(e.target.closest("[data-mobile-club]")){ closeMobileNav(); document.querySelector("#clube-relpps")?.scrollIntoView({behavior:"smooth",block:"start"}); } });
@@ -2129,6 +2181,10 @@ function bindEvents(){
   $$(".internal-header-nav a,.internal-site-header .page-home-logo").forEach(link=>link.addEventListener("click",e=>{e.preventDefault();navigateInternal(link.getAttribute("href")||"#inicio");}));
   $("#productGrid").addEventListener("click",e=>{const view=e.target.closest("[data-view]");const add=e.target.closest("[data-add]");if(view)openProduct(view.dataset.view);if(add)addToCart(add.dataset.add);});
   $("#homeCollections")?.addEventListener("click",e=>{const view=e.target.closest("[data-view]");if(view)openProduct(view.dataset.view);});
+  $("#launchesGrid")?.addEventListener("click",e=>{
+    const view=e.target.closest("[data-view]");
+    if(view) openProduct(view.dataset.view);
+  });
   $$(".category-card").forEach(b=>b.addEventListener("click",()=>{const area=b.dataset.area||""; currentArea=area; currentCategory=""; currentSearch=""; resetCatalogPage(); openFunnel(area); document.querySelector("#funnelCategorias")?.scrollIntoView({behavior:"smooth",block:"center"});}));
   $$(".nav-bar a[data-category]").forEach(a=>a.addEventListener("click",()=>selectCatalogPath(a.dataset.area||"",a.dataset.category||"",false)));
   $$(".nav-bar a[data-area]").forEach(a=>a.addEventListener("click",()=>selectCatalogPath(a.dataset.area||"","",false)));
@@ -2259,7 +2315,7 @@ function initClubRelpps(){
     const email=String(input.value||"").trim().toLowerCase();
     if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)){
       input.focus();
-      toast("Digite um e-mail válido para receber novidades do Club Relpps.");
+      toast("Digite um e-mail válido para receber novidades do Minha Relpps.");
       return;
     }
     try{
@@ -2269,7 +2325,7 @@ function initClubRelpps(){
       localStorage.setItem("relpps-club-emails",JSON.stringify(list));
     }catch(_){/* newsletter continua funcionando visualmente */}
     input.value="";
-    toast("Pronto! Você entrou no Club Relpps ✦");
+    toast("Pronto! Você entrou no Minha Relpps ✦");
   });
 }
 
@@ -2504,7 +2560,7 @@ function validateCheckoutReceiveStage(){
     document.querySelector("#shippingQuotePanel")?.scrollIntoView({behavior:"smooth",block:"center"});
     return false;
   }
-  if(method==="uber" && (!selectedShipping || selectedShipping.provider!=="uber" || Number(selectedShipping.price||0)<=0 || !selectedShipping.quote_token)){toast("Calcule e selecione o Uber Direct antes de continuar.");document.querySelector("#shippingQuotePanel")?.scrollIntoView({behavior:"smooth",block:"center"});return false;}
+  if(method==="uber" && (!selectedShipping || selectedShipping.provider!=="uber" || Number(selectedShipping.price||0)<=0 || !selectedShipping.quote_token)){toast("Calcule e selecione o Uber Moto antes de continuar.");document.querySelector("#shippingQuotePanel")?.scrollIntoView({behavior:"smooth",block:"center"});return false;}
   return true;
 }
 
@@ -2636,15 +2692,28 @@ function renderProductReviews(){
   box.innerHTML=list.slice().reverse().map(r=>`<article class="review-card"><div class="review-card-head"><div><b>${escapeHtml(r.name||"Cliente Relpps")}</b><div class="stars">${"★".repeat(Number(r.rating||5))}${"☆".repeat(5-Number(r.rating||5))}</div></div><time>${escapeHtml(r.date||"")}</time></div><p>${escapeHtml(r.comment||"")}</p>${Array.isArray(r.images)&&r.images.length?`<div class="review-images">${r.images.map(src=>`<img src="${src}" alt="Foto enviada na avaliação" loading="lazy">`).join("")}</div>`:""}</article>`).join("");
 }
 function escapeHtml(value){return String(value||"").replace(/[&<>'\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
+let productReturnState = null;
+let productHistoryActive = false;
+
 function openProduct(id){
   const p=products.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!productHistoryActive){
+    productReturnState={
+      scrollY:window.scrollY||0,
+      hash:location.hash||'',
+      search:location.search||'',
+      path:location.pathname||''
+    };
+    productHistoryActive=true;
+    history.pushState({relppsProduct:true, productId:String(id)}, document.title, `${location.pathname}${location.search}#produto-${encodeURIComponent(String(id))}`);
+  }
   productPageActive=p;activeProduct=p;productPageQty=1;productPageVars={};
   const first=p.variationItems?.find(x=>Number(x.stock)>0)||p.variationItems?.[0];
   if(first?.variations) productPageVars={...first.variations}; else Object.entries(p.variations||{}).forEach(([k,v])=>{if(v?.length)productPageVars[k]=v[0]});
   productGalleryImages=productGalleryFor(p);productGalleryIndex=0;
   $("#productPageArea").textContent=formatDisplayLabel(p.area||"Produtos");$("#productPageCrumb").textContent=p.name;$("#productPageCategory").textContent=[p.area,p.category].filter(Boolean).map(formatDisplayLabel).join(" · ");$("#productPageBrand").textContent=p.brand||"";$("#productPageName").textContent=p.name;$("#productPageDescription").textContent=p.description||"";$("#productQtyValue").textContent="1";
   renderProductGallery();renderProductPageVariations();refreshProductPageVariationUI();renderProductDetails();renderProductReviews();renderFavoriteButton();
-  $("#productPageCartCount").textContent=cart.reduce((s,i)=>s+i.qty,0);
+  if($("#productPageCartCount")) $("#productPageCartCount").textContent=cart.reduce((s,i)=>s+i.qty,0);
   const page=$("#productPage");page.classList.remove("hidden");page.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";page.scrollTop=0;
 }
 function closeAllDedicatedPages(){
@@ -2659,7 +2728,34 @@ function closeAllDedicatedPages(){
   window.scrollTo({top:0,behavior:"smooth"});
   if(location.hash!=="#inicio") history.replaceState(null,"","#inicio");
 }
-function closeProductPage(){const page=$("#productPage");if(!page)return;page.classList.add("hidden");page.setAttribute("aria-hidden","true");document.body.style.overflow="";productPageActive=null;}
+function finishCloseProductPage(){
+  const page=$("#productPage");
+  if(!page)return;
+  page.classList.add("hidden");
+  page.setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+  productPageActive=null;
+  const state=productReturnState;
+  productReturnState=null;
+  productHistoryActive=false;
+  requestAnimationFrame(()=>{
+    window.scrollTo({top:Number(state?.scrollY)||0,left:0,behavior:"auto"});
+  });
+}
+function closeProductPage(useHistory=true){
+  const page=$("#productPage");
+  if(!page || page.classList.contains("hidden"))return;
+  if(useHistory && productHistoryActive && history.state?.relppsProduct){
+    history.back();
+    return;
+  }
+  finishCloseProductPage();
+}
+window.addEventListener("popstate",()=>{
+  if(productHistoryActive && !history.state?.relppsProduct){
+    finishCloseProductPage();
+  }
+});
 let addedModalTimer=null;
 function relatedProductsFor(p){
   const source=[...products].filter(x=>String(x.id)!==String(p?.id)&&Number(x.stock)>0);
@@ -2683,24 +2779,25 @@ function closeAddedToCartModal(){const modal=$("#addedToCartModal");if(modal)mod
 
 function initProductPage(){
   $("#productPageBack")?.addEventListener("click",closeProductPage);
+  $("#productPageReturn")?.addEventListener("click",closeAllDedicatedPages);
   $("#productPageHomeMobile")?.addEventListener("click",closeAllDedicatedPages);
-  $("#productBreadcrumbHome")?.addEventListener("click",()=>{closeProductPage();openCatalogPage();});
+  $("#productBreadcrumbHome")?.addEventListener("click",()=>{closeProductPage(false);openCatalogPage();});
   $$(".page-home-logo").forEach(el=>el.addEventListener("click",e=>{e.preventDefault();closeAllDedicatedPages();}));
 
-  $("#productPageCart")?.addEventListener("click",()=>{closeProductPage();openCart();});
+  $("#productPageCart")?.addEventListener("click",()=>{closeProductPage(false);openCart();});
   $("#productGalleryPrev")?.addEventListener("click",()=>{if(!productGalleryImages.length)return;productGalleryIndex=(productGalleryIndex-1+productGalleryImages.length)%productGalleryImages.length;renderProductGallery();});
   $("#productGalleryNext")?.addEventListener("click",()=>{if(!productGalleryImages.length)return;productGalleryIndex=(productGalleryIndex+1)%productGalleryImages.length;renderProductGallery();});
   $("#productThumbnails")?.addEventListener("click",e=>{const b=e.target.closest("[data-gallery-index]");if(!b)return;productGalleryIndex=Number(b.dataset.galleryIndex)||0;renderProductGallery();});
   $("#productQtyMinus")?.addEventListener("click",()=>{productPageQty=Math.max(1,productPageQty-1);$("#productQtyValue").textContent=productPageQty;});
   $("#productQtyPlus")?.addEventListener("click",()=>{const stock=getVariationStock(productPageActive,productPageVars);productPageQty=Math.min(Math.max(1,stock),productPageQty+1);$("#productQtyValue").textContent=productPageQty;});
-  $("#productPageAdd")?.addEventListener("click",()=>{if(!productPageActive)return;for(let i=0;i<productPageQty;i++)addToCart(productPageActive.id,productPageVars);$("#productPageCartCount").textContent=cart.reduce((s,x)=>s+x.qty,0);showAddedToCartModal();});
+  $("#productPageAdd")?.addEventListener("click",()=>{if(!productPageActive)return;for(let i=0;i<productPageQty;i++)addToCart(productPageActive.id,productPageVars);if($("#productPageCartCount")) $("#productPageCartCount").textContent=cart.reduce((s,x)=>s+x.qty,0);showAddedToCartModal();});
   $("#productFavoriteButton")?.addEventListener("click",async()=>{if(!productPageActive)return;if(!currentUser){pendingFavoriteId=productPageActive.id;await openAccount();toast("Entre na sua conta para salvar seus produtos favoritos.");return;}const fav=getFavorites(),id=String(productPageActive.id),i=fav.indexOf(id);if(i>=0)fav.splice(i,1);else fav.push(id);localStorage.setItem(favoriteStorageKey(),JSON.stringify(fav));renderFavoriteButton();toast(i>=0?"Produto removido dos salvos.":"Produto salvo na sua conta.");});
   $("#addedToCartClose")?.addEventListener("click",closeAddedToCartModal);
   $("#addedContinueShopping")?.addEventListener("click",closeAddedToCartModal);
-  $("#addedGoCart")?.addEventListener("click",()=>{closeAddedToCartModal();closeProductPage();openCartPage();});
+  $("#addedGoCart")?.addEventListener("click",()=>{closeAddedToCartModal();closeProductPage(false);openCartPage();});
   $("#addedRelatedPrev")?.addEventListener("click",()=>$("#addedRelatedTrack")?.scrollBy({left:-250,behavior:"smooth"}));
   $("#addedRelatedNext")?.addEventListener("click",()=>$("#addedRelatedTrack")?.scrollBy({left:250,behavior:"smooth"}));
-  $("#addedRelatedTrack")?.addEventListener("click",e=>{const add=e.target.closest("[data-added-add]"),view=e.target.closest("[data-added-view]");if(add){const id=add.dataset.addedAdd;addToCart(id);$("#productPageCartCount").textContent=cart.reduce((s,x)=>s+x.qty,0);toast("Produto relacionado adicionado ao carrinho.");}if(view){closeAddedToCartModal();openProduct(view.dataset.addedView);}});
+  $("#addedRelatedTrack")?.addEventListener("click",e=>{const add=e.target.closest("[data-added-add]"),view=e.target.closest("[data-added-view]");if(add){const id=add.dataset.addedAdd;addToCart(id);if($("#productPageCartCount")) $("#productPageCartCount").textContent=cart.reduce((s,x)=>s+x.qty,0);toast("Produto relacionado adicionado ao carrinho.");}if(view){closeAddedToCartModal();openProduct(view.dataset.addedView);}});
   $("#addedToCartModal")?.addEventListener("click",e=>{if(e.target===e.currentTarget)closeAddedToCartModal();});
   $("#productReviewJump")?.addEventListener("click",()=>$("#productReviews")?.scrollIntoView({behavior:"smooth",block:"start"}));
   $$("[data-product-tab]").forEach(btn=>btn.addEventListener("click",()=>{const tab=btn.dataset.productTab;$$('[data-product-tab]').forEach(x=>x.classList.toggle("active",x===btn));$$('[data-product-panel]').forEach(x=>x.classList.toggle("active",x.dataset.productPanel===tab));}));
@@ -2752,7 +2849,7 @@ async function handleCheckoutReturn(){
 handleCheckoutReturn();
 
 
-// ===== Club Relpps: conta dedicada, jornada premium e cupom no pagamento =====
+// ===== Minha Relpps: conta dedicada, jornada premium e cupom no pagamento =====
 (function initMinhaRelppsPremium(){
   $("#minhaRelppsBack")?.addEventListener("click",async()=>{pendingCheckout=false;await closeMinhaRelppsPage();});
   $("#minhaRelppsLogout")?.addEventListener("click",logoutAccount);
@@ -2762,10 +2859,26 @@ handleCheckoutReturn();
     if(goCheckout){ pendingCheckout=false; await closeMinhaRelppsPage(); await openCheckout(); toast("Seus dados foram preparados para facilitar sua compra."); }
     else { await closeMinhaRelppsPage(); toast("Seus dados estão prontos para facilitar sua próxima compra."); }
   });
+  $("#minhaRelppsNewAddress")?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openMinhaRelppsAddressEditor();});
+  $("#minhaRelppsAddressForm")?.addEventListener("submit",saveMinhaRelppsAddress);
+  $("#minhaRelppsAddressClose")?.addEventListener("click",()=>{const m=$("#minhaRelppsAddressModal");m?.classList.add("hidden");m?.setAttribute("aria-hidden","true");document.body.style.overflow="hidden";});
+  $("#minhaRelppsSac")?.addEventListener("click",()=>{const url=whatsappLink("Olá! Preciso de ajuda com a minha conta ou pedido na Relpps Cosméticos.");window.open(url,"_blank","noopener");});
   $("#minhaRelppsRewards")?.addEventListener("click",e=>{const b=e.target.closest(".club-reward-card");if(!b||b.disabled)return;redeemLoyaltyReward(Number(b.dataset.rewardPoints),Number(b.dataset.rewardValue));renderMinhaRelppsPage();});
 
   $("#clubSuggestAll")?.addEventListener("click",async()=>{pendingCheckout=false;await closeMinhaRelppsPage();openCatalogPage();});
   $$("[data-club-catalog]").forEach(btn=>btn.addEventListener("click",async()=>{const area=btn.dataset.clubCatalog||"";pendingCheckout=false;await closeMinhaRelppsPage();selectCatalogPath(area,"",true);}));
   $("#applyCheckoutCoupon")?.addEventListener("click",applyCheckoutCoupon);
   $("#checkoutCouponCode")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyCheckoutCoupon();}});
+})();
+
+// Animações elegantes ao descer a página, respeitando acessibilidade.
+(function initScrollReveal(){
+  const targets=$$('.reveal-item, .home-collection-block, .section-heading, .category-card, .brand-card, .service-card, .promo-banner, .brands, .form-section');
+  if(!targets.length)return;
+  if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){targets.forEach(el=>el.classList.add('scroll-reveal','is-visible'));return;}
+  targets.forEach(el=>{el.classList.add('scroll-reveal');});
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('is-visible');io.unobserve(entry.target);}});
+  },{threshold:.08,rootMargin:'0px 0px -8% 0px'});
+  targets.forEach(el=>io.observe(el));
 })();

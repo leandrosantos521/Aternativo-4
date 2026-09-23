@@ -11,7 +11,7 @@ function json(statusCode, body, headers={}) {
   };
 }
 
-function publicSiteUrl(){ return String(process.env.PUBLIC_SITE_URL || "https://relppscosmeticooo.netlify.app").replace(/\/$/,""); }
+function publicSiteUrl(){ return String(process.env.PUBLIC_SITE_URL || "https://relppscos.netlify.app").replace(/\/$/,""); }
 function redirectUri(){ return process.env.BLING_REDIRECT_URI || `${publicSiteUrl()}/bling-callback.html`; }
 function oauthSecret(){ return process.env.BLING_OAUTH_STATE_SECRET || process.env.BLING_CLIENT_SECRET || ""; }
 function signState(payload){
@@ -132,10 +132,10 @@ async function proxyBlingImage(rawUrl){
   // CDN de imagens não deve compartilhar o limitador da API REST (3 req/s).
   // Isso deixava dezenas de imagens esperando em fila e tornava a vitrine lenta.
   // Tentamos primeiro sem token e, somente se o CDN exigir autenticação, com Bearer.
-  let response=await fetch(target,{headers:{Accept:'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8','User-Agent':'Relpps-Catalog/2.0','Referer':'https://relppscosmeticooo.netlify.app/'},redirect:'follow'});
+  let response=await fetch(target,{headers:{Accept:'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8','User-Agent':'Relpps-Catalog/2.0','Referer':'https://relppscos.netlify.app/'},redirect:'follow'});
   if((response.status===401||response.status===403)){
     const token=await tokenFromRefresh();
-    response=await fetch(target,{headers:{Authorization:`Bearer ${token}`,Accept:'image/*,*/*;q=0.8','User-Agent':'Relpps-Catalog/2.0','Referer':'https://relppscosmeticooo.netlify.app/'},redirect:'follow'});
+    response=await fetch(target,{headers:{Authorization:`Bearer ${token}`,Accept:'image/*,*/*;q=0.8','User-Agent':'Relpps-Catalog/2.0','Referer':'https://relppscos.netlify.app/'},redirect:'follow'});
   }
   if(!response.ok) throw new Error(`Imagem HTTP ${response.status}`);
   const type=String(response.headers.get('content-type')||'').toLowerCase();
@@ -244,7 +244,7 @@ exports.handler = async (event) => {
       // O Bling usa a URL cadastrada no aplicativo quando redirect_uri não é enviado.
       // Isso evita falhas por diferença de barra final, protocolo ou domínio entre
       // o cadastro do app e a URL enviada no authorize.
-      // A URL esperada no cadastro é: https://relppscosmeticooo.netlify.app/bling-callback.html
+      // A URL esperada no cadastro é: https://relppscos.netlify.app/bling-callback.html
       return {statusCode:302,headers:{Location:u.toString(),"Cache-Control":"no-store"},body:""};
     }
 

@@ -27,6 +27,7 @@ exports.handler=async()=>{
     infinitePay:Boolean(String(process.env.INFINITEPAY_HANDLE||'rps210323').trim()),
     supabase:Boolean(process.env.SUPABASE_URL&&process.env.SUPABASE_SERVICE_ROLE_KEY),
     shipping:Boolean((process.env.MELHOR_ENVIO_TOKEN||shippingOAuth?.access_token||shippingOAuth?.refresh_token)&&String(process.env.STORE_POSTAL_CODE||'').replace(/\D/g,'').length===8),
+    uber:Boolean(process.env.UBER_DIRECT_ENABLED==='true'&&process.env.UBER_DIRECT_CLIENT_ID&&process.env.UBER_DIRECT_CLIENT_SECRET&&process.env.UBER_DIRECT_CUSTOMER_ID),
     production:process.env.CHECKOUT_TEST_MODE==='false',
     publicSite:Boolean(process.env.PUBLIC_SITE_URL),
     relppsOrders:false,
@@ -40,7 +41,8 @@ exports.handler=async()=>{
   const warnings=[];
   if(!checks.relppsOrders)warnings.push('Supabase: crie a tabela relpps_orders pelo SQL entregue no ZIP.');
   if(!checks.relppsBlingOAuth)warnings.push('Supabase: crie relpps_bling_oauth para manter o OAuth do Bling renovável.');
-  if(!checks.shipping)warnings.push('Melhor Envio ainda não está conectado; Uber manual e retirada continuam disponíveis.');
+  if(!checks.shipping)warnings.push('Melhor Envio ainda não está conectado; a cotação PAC/SEDEX/Mini Envios ficará indisponível até autorizar a conta.');
+  if(!checks.uber)warnings.push('Uber Direct ainda não está com Client ID, Client Secret e Customer ID completos no Netlify.');
   if(!checks.blingPendingSituation||!checks.blingPaidSituation)warnings.push('Opcional: informe os IDs das situações Aguardando Pagamento e Pago do Bling para atualizar a situação automaticamente.');
   return json(ok?200:503,{ok,service:'Relpps production preflight',checks,warnings,note:'Nenhuma chave secreta é retornada por este endpoint.'});
 };

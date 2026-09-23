@@ -239,6 +239,26 @@ function situationId(name){
   return process.env[key] ? Number(process.env[key]) : null;
 }
 
+async function discoverSalesOrderSituationId(target){
+  const wanted=target==='paid'
+    ? /^(pago|pagamento aprovado|pedido pago|pago pelo cliente)$/i
+    : /^(aguardando pagamento|aguardando pagamento online|pendente)$/i;
+  try{
+    const modules=await blingFetch('/situacoes/modulos');
+    const rows=Array.isArray(modules?.data)?modules.data:[];
+    const module=rows.find(m=>/pedido.*venda|venda/i.test(String(m?.nome||'')+' '+String(m?.descricao||'')));
+    if(!module?.id) return null;
+    const situations=await blingFetch(`/situacoes/modulos/${encodeURIComponent(module.id)}`);
+    const list=Array.isArray(situations?.data)?situations.data:[];
+    const hit=list.find(x=>wanted.test(String(x?.nome||'').trim())) ||
+      (target==='paid'?list.find(x=>/pago|pagamento.*aprov/i.test(String(x?.nome||''))):list.find(x=>/aguardando.*pagamento|pendente/i.test(String(x?.nome||''))));
+    return hit?.id ? Number(hit.id) : null;
+  }catch(e){
+    console.warn(`[Bling] não foi possível descobrir situação ${target}:`,e.message);
+    return null;
+  }
+}
+
 async function setOrderSituation(orderId, situationIdValue){
   if(!orderId || !situationIdValue) return {skipped:true};
   try{
@@ -408,4 +428,4 @@ async function updateSaleOrderFreight(orderId,{price,total,provider,label,servic
   return await blingFetch(`/pedidos/vendas/${encodeURIComponent(orderId)}`,{method:'PUT',body:JSON.stringify(next)});
 }
 
-module.exports={blingFetch,getProduct,productPrice,productStock,createSaleOrder,setOrderSituation,situationId,cleanDoc,findOrCreateContact,findOrCreateContactIdentity,findSaleOrderByStoreNumber,getSaleOrder,updateSaleOrderFreight};
+module.exports={blingFetch,getProduct,productPrice,productStock,createSaleOrder,setOrderSituation,situationId,discoverSalesOrderSituationId,cleanDoc,findOrCreateContact,findOrCreateContactIdentity,findSaleOrderByStoreNumber,getSaleOrder,updateSaleOrderFreight};
