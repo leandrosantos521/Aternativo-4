@@ -1833,15 +1833,15 @@ body.mobile-nav-open{overflow:hidden}
 .category-grid-main{grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
 .category-card{min-height:170px;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column}
 .category-art.category-photo{display:none!important}
-.category-icon{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;background:var(--pink-soft,#f7d7e7);box-shadow:0 12px 30px rgba(80,25,55,.08);border:1px solid rgba(150,50,100,.10)}
+.category-icon{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 12px 30px rgba(80,25,55,.08);border:1px solid #ece7e2}
 .category-icon svg{width:43px;height:43px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:#3a2631}
 .category-card b{font-size:17px;text-transform:lowercase;letter-spacing:.01em}
 .category-card small{display:none!important}
 
 .brand-circle-showcase{padding-top:16px;padding-bottom:28px}
-.brand-circle-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:22px;align-items:start}
+.brand-circle-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:22px;align-items:start}
 .brand-circle-grid button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;color:inherit}
-.brand-circle-grid button>span{width:92px;height:92px;border-radius:50%;background:#f6c5dc;display:grid;place-items:center;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease}
+.brand-circle-grid button>span{width:92px;height:92px;border-radius:50%;background:#fff;display:grid;place-items:center;overflow:hidden;border:1px solid #ece7e2;transition:transform .25s ease,box-shadow .25s ease}
 .brand-circle-grid button:hover>span{transform:translateY(-4px);box-shadow:0 14px 28px rgba(90,30,65,.14)}
 .brand-circle-grid img{width:78%;height:78%;object-fit:contain;mix-blend-mode:multiply}
 .brand-circle-grid b{font-size:12px;font-weight:600;white-space:nowrap}
@@ -1963,3 +1963,200 @@ body.catalog-page-mode .site-header{position:sticky;top:0}
 }
 /* Performance: remove repaints contínuos que deixavam o scroll pesado. */
 body::before,.site-header,.announcement span{animation:none!important}
+
+/* ===== Ajuste final de cabeçalho interno =====
+   Páginas de produto, carrinho e checkout usam somente o cabeçalho preto da Relpps.
+   Sem barra branca e sem links de Atendimento/atalhos. */
+.internal-site-header .internal-header-nav{display:none!important}
+.internal-site-header .internal-header-main{
+  width:min(1280px,calc(100% - 48px));
+  height:82px;
+  grid-template-columns:auto 1fr auto;
+  gap:20px;
+}
+.internal-site-header .product-page-back,
+.internal-site-header .cart-page-back,
+.internal-site-header .checkout-page-back{display:none!important}
+.internal-site-header .product-page-brand,
+.internal-site-header .cart-page-brand,
+.internal-site-header .checkout-page-brand{
+  grid-column:1;
+  justify-self:start!important;
+  width:108px!important;
+  height:68px!important;
+}
+.internal-site-header .page-home-logo img{
+  width:100%!important;
+  height:68px!important;
+  object-fit:contain;
+}
+.internal-site-header .product-page-cart,
+.internal-site-header .cart-page-safe,
+.internal-site-header .checkout-page-safe{
+  grid-column:3;
+  justify-self:end!important;
+}
+.internal-site-header .product-page-cart{
+  min-height:42px;
+  padding:10px 17px;
+}
+.internal-site-header .checkout-page-safe,
+.internal-site-header .cart-page-safe{
+  padding:8px 0;
+  text-align:right;
+  color:#fff!important;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+}
+.internal-site-header .checkout-page-safe::first-letter{color:#d6ab60}
+.internal-site-header .checkout-page-safe small,
+.internal-site-header .cart-page-safe small{
+  display:block;
+  margin-top:2px;
+  color:rgba(255,255,255,.58)!important;
+  font-size:8px;
+  letter-spacing:.7px;
+  text-transform:none;
+}
+
+/* ===== Rodapé marrom + logos reais enviados pela Relpps ===== */
+.relpps-footer{background:#231d19!important;color:#eee!important}
+.relpps-footer .footer-main{padding-bottom:28px}
+.footer-payments{
+  display:grid;
+  grid-template-columns:1.25fr .75fr;
+  gap:60px;
+  padding:26px 0 34px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.footer-payment-kicker{
+  display:block;
+  margin-bottom:7px;
+  color:#cba261;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:2px;
+}
+.footer-payments h3{
+  margin:0 0 16px;
+  color:#fff;
+  font:600 23px/1.1 "Playfair Display",serif;
+}
+.footer-payment-logos{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.footer-payment-logos img{
+  width:auto;
+  height:34px;
+  max-width:86px;
+  object-fit:contain;
+  display:block;
+  background:#fff;
+  border-radius:4px;
+  padding:4px 7px;
+  box-sizing:border-box;
+}
+.footer-shipping-items{display:flex;flex-wrap:wrap;gap:9px}
+.footer-shipping-items span{
+  display:inline-flex;
+  align-items:center;
+  min-height:36px;
+  padding:0 13px;
+  border:1px solid rgba(222,190,132,.24);
+  border-radius:6px;
+  color:#eee4d9;
+  background:rgba(255,255,255,.035);
+  font-size:10px;
+  font-weight:800;
+}
+.relpps-footer .footer-bottom{background:#171411}
+
+@media(max-width:700px){
+  .internal-site-header .internal-header-main{width:calc(100% - 28px);height:74px}
+  .internal-site-header .product-page-brand,
+  .internal-site-header .cart-page-brand,
+  .internal-site-header .checkout-page-brand{width:82px!important;height:58px!important}
+  .internal-site-header .page-home-logo img{height:58px!important}
+  .internal-site-header .product-page-cart{font-size:9px;padding:9px 11px}
+  .internal-site-header .checkout-page-safe,
+  .internal-site-header .cart-page-safe{font-size:8px}
+  .internal-site-header .checkout-page-safe small,
+  .internal-site-header .cart-page-safe small{font-size:7px}
+  .footer-payments{grid-template-columns:1fr;gap:28px;padding-left:20px;padding-right:20px}
+  .footer-payment-logos img{height:31px}
+}
+
+/* ===== CABEÇALHO LIMPO — PRODUTO E CHECKOUT =====
+   Não altera o cabeçalho da página inicial nem o carrinho.
+   Produto e checkout usam um cabeçalho próprio, preto, com somente a logo centralizada. */
+.simple-logo-header{
+  height:92px!important;
+  min-height:92px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:#050505!important;
+  border:0!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.16)!important;
+  padding:0!important;
+  position:sticky!important;
+  top:0!important;
+  z-index:2500!important;
+}
+.simple-logo-header .simple-logo-link{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:110px!important;
+  height:78px!important;
+  margin:0 auto!important;
+  text-decoration:none!important;
+}
+.simple-logo-header .simple-logo-link img{
+  display:block!important;
+  width:82px!important;
+  height:70px!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+}
+.simple-logo-header .internal-header-main,
+.simple-logo-header .internal-header-nav,
+.simple-logo-header .product-page-back,
+.simple-logo-header .product-page-cart,
+.simple-logo-header .checkout-page-back,
+.simple-logo-header .checkout-page-safe{
+  display:none!important;
+}
+@media(max-width:700px){
+  .simple-logo-header{height:76px!important;min-height:76px!important}
+  .simple-logo-header .simple-logo-link{width:92px!important;height:66px!important}
+  .simple-logo-header .simple-logo-link img{width:70px!important;height:60px!important}
+}
+
+/* ===== RELPPS: lançamentos clicáveis + Minha Relpps ===== */
+.launch-product-clickable{cursor:pointer}
+.launch-product-clickable .product-name-link,.launch-product-clickable .product-image{cursor:pointer}
+.launches-grid .stock-dot{font-weight:800}
+.club-relpps-hidden-ui{display:none!important}
+.minha-relpps-profile-actions button{width:100%}
+.minha-relpps-profile-actions button:nth-child(n+2){border:1px solid rgba(232,205,157,.22);background:rgba(255,255,255,.04);color:#f4e5cc}
+.minha-relpps-profile-actions button:nth-child(n+2):hover{border-color:rgba(232,205,157,.5);transform:translateY(-1px)}
+.minha-relpps-address-modal{width:min(720px,calc(100% - 28px));max-height:90vh;overflow:auto}
+/* Tela dedicada de cadastro de endereço dentro do Minha Relpps */
+.minha-relpps-address-modal{width:min(980px,calc(100% - 28px));max-height:calc(100vh - 40px);padding:clamp(28px,5vw,56px);border-radius:28px}
+.address-screen-back{display:inline-flex;align-items:center;border:1px solid #c8b18b;background:transparent;color:#6f5737;border-radius:999px;padding:11px 18px;font:600 11px/1.1 Arial,sans-serif;letter-spacing:.08em;cursor:pointer;margin-bottom:28px}
+.address-screen-back:hover{background:#f4ede4}
+@media(max-width:600px){.minha-relpps-address-modal{width:calc(100% - 18px);max-height:calc(100vh - 18px);padding:24px 18px;border-radius:22px}.address-screen-back{font-size:10px;padding:10px 14px}}
+
+.minha-relpps-address-modal h2{margin:8px 0;font:600 34px/1.1 "Playfair Display",serif;color:#2d2118}
+.minha-relpps-address-modal>p{color:#786b61;font-size:13px;margin:0 0 20px}
+.minha-relpps-address-modal .account-form label{color:#4a3b30}
+.minha-relpps-address-modal .account-form input{background:#fff;border-color:#ddd1c4;color:#2d2118}
+@media(max-width:800px){.minha-relpps-profile-actions{grid-template-columns:1fr}.minha-relpps-address-modal h2{font-size:28px}}
+
+
+/* Ajustes finais 23-09-2026 */
+.product-page-return{display:inline-flex;align-items:center;gap:8px;margin:18px 0 8px;padding:10px 16px;border:1px solid rgba(181,138,67,.35);border-radius:999px;background:#fff;color:#4a392d;font:600 12px/1 Arial,sans-serif;letter-spacing:.04em;cursor:pointer;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}.product-page-return:hover{transform:translateX(-3px);border-color:rgba(181,138,67,.65);box-shadow:0 10px 25px rgba(58,40,24,.09)}
+.minha-relpps-account-only{grid-template-columns:minmax(0,1fr)!important}.minha-relpps-account-only .minha-relpps-profile-card{max-width:none!important}.minha-relpps-page .minha-relpps-account-only{margin-top:24px}.minha-relpps-page .club-suggest-head .eyebrow{color:#c79b52}
+.scroll-reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}.scroll-reveal.is-visible{opacity:1;transform:none}@media(prefers-reduced-motion:reduce){.scroll-reveal{opacity:1;transform:none;transition:none}.product-page-return{transition:none}}

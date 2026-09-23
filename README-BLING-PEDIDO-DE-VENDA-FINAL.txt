@@ -1,19 +1,19 @@
 RELPPS — BLING / PEDIDO DE VENDA — CONFIGURAÇÃO FINAL
 
 DOMÍNIO
-https://relppscosmeticooo.netlify.app
+https://relppscos.netlify.app
 
 O checkout cria o Pedido de Venda diretamente no Bling pela API v3, em:
 Vendas > Pedidos de Venda
 
 CALLBACK OAUTH DO BLING
-https://relppscosmeticooo.netlify.app/bling-callback.html
+https://relppscos.netlify.app/bling-callback.html
 
 AUTORIZAÇÃO DIRETA
-https://relppscosmeticooo.netlify.app/api/bling?action=authorize
+https://relppscos.netlify.app/api/bling?action=authorize
 
 WEBHOOK DO BLING — PEDIDO DE VENDA
-https://relppscosmeticooo.netlify.app/api/bling-webhook
+https://relppscos.netlify.app/api/bling-webhook
 
 No aplicativo do Bling, habilite o recurso/escopo de webhook:
 Pedido de Venda (order)
@@ -24,7 +24,7 @@ order.updated
 O webhook valida o header X-Bling-Signature-256 usando o BLING_CLIENT_SECRET.
 
 NETLIFY — VARIÁVEIS OBRIGATÓRIAS PARA CRIAR PEDIDO
-PUBLIC_SITE_URL=https://relppscosmeticooo.netlify.app
+PUBLIC_SITE_URL=https://relppscos.netlify.app
 BLING_CREATE_ORDERS=true
 BLING_CLIENT_ID=<Client ID do aplicativo Bling>
 BLING_CLIENT_SECRET=<Client Secret do aplicativo Bling>

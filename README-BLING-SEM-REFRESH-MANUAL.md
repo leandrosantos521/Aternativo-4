@@ -11,8 +11,8 @@ O refresh token é devolvido pelo próprio Bling quando a autorização OAuth é
 ## Variáveis obrigatórias no Netlify
 Configure somente:
 
-- `PUBLIC_SITE_URL=https://relppscosmeticooo.netlify.app`
-- `BLING_REDIRECT_URI=https://relppscosmeticooo.netlify.app/bling-callback.html`
+- `PUBLIC_SITE_URL=https://relppscos.netlify.app`
+- `BLING_REDIRECT_URI=https://relppscos.netlify.app/bling-callback.html`
 - `BLING_CLIENT_ID=<seu Client ID do Bling>`
 - `BLING_CLIENT_SECRET=<seu Client Secret do Bling>`
 - `BLING_OAUTH_STATE_SECRET=<um segredo aleatório seu>`
@@ -27,7 +27,7 @@ Configure somente:
 ## Primeiro teste após o deploy
 Abra:
 
-`https://relppscosmeticooo.netlify.app/api/bling?action=status`
+`https://relppscos.netlify.app/api/bling?action=status`
 
 O JSON precisa mostrar:
 
@@ -38,13 +38,13 @@ O JSON precisa mostrar:
 
 Se `connected` estiver false, abra:
 
-`https://relppscosmeticooo.netlify.app/api/bling?action=authorize`
+`https://relppscos.netlify.app/api/bling?action=authorize`
 
 Autorize a conta do Bling e aguarde a página `Bling conectado`.
 
 ## Callback cadastrado no Bling
 
-`https://relppscosmeticooo.netlify.app/bling-callback.html`
+`https://relppscos.netlify.app/bling-callback.html`
 
 O endereço deve estar exatamente assim no aplicativo do Bling.
 
