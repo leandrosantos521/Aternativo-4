@@ -75,20 +75,6 @@ function sentenceCasePtBr(value, fallback=""){
   return lower.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]/, ch=>ch.toLocaleUpperCase("pt-BR"));
 }
 
-// Nome de cílios: mantém o texto completo do Bling, mas corrige caixa e marcas.
-function formatLashFullName(value){
-  let text=sentenceCasePtBr(value,"Cílios");
-  for(const [key,aliases] of Object.entries(BRAND_ALIASES)){
-    const shown=displayBrand(key);
-    if(!shown) continue;
-    for(const alias of aliases){
-      const escaped=String(alias).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
-      text=text.replace(new RegExp(`\\b${escaped}\\b`,"gi"),shown);
-    }
-  }
-  return text.replace(/^cilios\b/i,"Cílios").replace(/^cílios\b/i,"Cílios");
-}
-
 function extractBrandSuffixCandidate(value){
   const text=stripHtmlText(value).trim();
   // Considera somente o último trecho após um separador com espaços, para não
@@ -159,10 +145,6 @@ let currentArea = "";
 let currentCategory = "";
 let currentBrand = "";
 let currentSearch = "";
-window.RELPPS_CATALOG_SIZE_FILTER="";
-window.RELPPS_CATALOG_VOLUME_FILTER="";
-window.RELPPS_CATALOG_CURVATURE_FILTER="";
-window.RELPPS_CATALOG_COLOR_FILTER="";
 let cartPageReceiveMode = "delivery";
 let pendingCheckout = false;
 const PRODUCTS_PER_PAGE = 50;
@@ -341,7 +323,6 @@ function inferredGroupBase(p){
 }
 
 function productIdentityKey(p){
-  if(p?.isActualLash && p?.lashGroupKey) return `lash|${p.lashGroupKey}`;
   const brand=slug(p?.brand||"").trim()||"sem-marca";
   const area=slug(p?.area||"");
   const category=slug(p?.category||"");
@@ -452,198 +433,26 @@ function safeImageFallback(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><rect width="800" height="800" fill="#f7f7f5"/><circle cx="400" cy="340" r="120" fill="#eceae5"/><path d="M320 520h160" stroke="#b08a55" stroke-width="10" stroke-linecap="round"/><text x="400" y="590" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" fill="#6b6258">Imagem do produto no Bling</text></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
-function isActualLashProduct(p){
-  const raw=slug([p?.nome,p?.name,p?.descricao,p?.descricaoCurta,p?.descricaoComplementar].filter(Boolean).join(" "));
-  if(!raw.includes("cilios") && !raw.includes("cilio")) return false;
-  // Não classifica colas, primers, removedores, sprays, placas e acessórios como o produto "Cílios".
-  if(/\bcola\b|uniglue|primer|cleanser|removedor|finalizador|acelerador|placa\b|fita\b|pinça|pinca|escovinha|microbrush|pedra jade|aplicador|pad\b|patch\b/.test(raw)) return false;
-  if(/\b(?:\d+(?:[.,]\d+)?)\s*(?:g|ml)\b/.test(raw) && !/\b(?:w|u-y|yy|ellipse|fio\s*(?:a\s*)?fio|classico|cl[aá]ssico|full\s*grip|\d+d)\b|\b\d+(?:[.,]\d+)?\s*mm\b|\bmix\b|curvatura/.test(raw)) return false;
-  // Produtos de fios normalmente trazem volume/modelo, espessura, comprimento, mix ou curvatura.
-  return /\b(?:w|u-y|yy|fio\s*(?:a\s*)?fio|ellipse|classico|cl[aá]ssico|full\s*grip|\d+d)\b|\b\d+(?:[.,]\d+)?\s*mm\b|\bmix\b|curvatura/.test(raw);
-}
-
-function normalizeLashAttributes(p){
-  const rawName=stripHtmlText(p?.nome||p?.name||p?.descricao||"");
-  const rawDesc=stripHtmlText([p?.descricao,p?.descricaoCurta,p?.descricaoComplementar,p?.descricaoDetalhada].filter(Boolean).join(" "));
-  const combined=`${rawName} ${rawDesc}`.replace(/\s+/g," ").trim();
-  const low=slug(combined);
-  const out={};
-  const add=(k,v)=>{v=String(v||"").trim();if(!v)return;if(!out[k])out[k]=[];if(!out[k].some(x=>slug(x)===slug(v)))out[k].push(v);};
-
-  // Marca: o Bling muitas vezes traz a marca no sufixo do nome quando o campo marca está vazio.
-  let brandKeyResolved=canonicalBrandKey(p?.marca?.descricao||p?.marca?.nome||p?.brand||"");
-  if(!brandKeyResolved) brandKeyResolved=inferBrandFromText(combined);
-  const suffix=extractBrandSuffixCandidate(rawName);
-  if(!brandKeyResolved && suffix) brandKeyResolved=canonicalBrandKey(suffix)||inferBrandFromText(suffix);
-  const brand=brandKeyResolved?displayBrand(brandKeyResolved):(suffix?titleCaseBrand(suffix):"");
-
-  const marrom=/\bmarrom\b|\bbrown\b/.test(low);
-  const hasPink=/\bpink\b|\brosa\b/.test(low);
-
-  // Fio/modelo que deve permanecer no nome. Tamanho, curvatura e espessura ficam nas variações.
-  let model="";
-  let m=combined.match(/\b(W|U-Y|YY)\s*[- ]?\s*(\d+D(?:\s*\([^)]*D\s+DUPLO\))?)/i);
-  if(m) model=`${m[1].toUpperCase()} ${m[2].replace(/\s+/g," ").trim()}`;
-  if(!model){
-    m=combined.match(/\b(W|U-Y|YY)\b/i);
-    if(m) model=m[1].toUpperCase();
-  }
-  if(!model){
-    m=combined.match(/\b(\d+D\s*\([^)]*D\s+DUPLO\))\b/i);
-    if(m) model=m[1].replace(/\s+/g," ").trim();
-  }
-  if(!model){
-    m=combined.match(/\b(FIO\s*A\s*FIO|FIO\s+FIO|ELLIPSE|CL[AÁ]SSICO|FULL\s+GRIP(?:\s+[A-Z0-9]+)?|DIAMOND|MASTER\s+DIAMOND|RUBY|VEGA|BROWN|KING|AURORA|PURE\+\+|ORGANIC\s+PRO|ICON\s+MD)\b/i);
-    if(m) model=m[1].replace(/\s+/g," ").trim();
-  }
-  if(!model){
-    const generic=rawName.replace(/^\s*C[IÍ]LIOS\s*/i,"").split(/\s+-\s+/)[0].trim();
-    model=generic.replace(/\bMARROM\b/ig,"").replace(/\bMIX\b/ig,"").replace(/\bCURVATURA\b.*$/i,"").replace(/\b\d+(?:[.,]\d+)?\s*MM\b/ig,"").replace(/\s+/g," ").trim();
-  }
-  if(!model) model="Cílios";
-  model=sentenceCasePtBr(model,"Cílios");
-  // Normaliza "3D DUPLO" / "4D DUPLO" para aparecer junto do 6D/8D no nome.
-  model=model.replace(/\b(\d+D)\s*\(\s*(\d+D)\s+DUPLO\s*\)/i,(a,total,double)=>`${total} (${double} Duplo)`);
-
-  // Comprimentos: MIX primeiro; depois tamanhos unitários em ordem crescente.
-  const sizes=[];
-  let mix;
-  const mixRe=/\b(?:MIX\s*)?(\d{1,2})\s*(?:-|–|—|a|até|to|ao)\s*(\d{1,2})\s*(?:MM)?\b/ig;
-  while((mix=mixRe.exec(combined))) {
-    const lo=Number(mix[1]),hi=Number(mix[2]);
-    if(lo>=4 && hi>=lo && hi<=30 && hi-lo>=1) sizes.push({kind:"mix",min:lo,max:hi,label:`Mix ${lo}-${hi}mm`});
-  }
-  const parenMix=/\(\s*(\d{1,2})\s*(?:-|–|—|a|até|ao)\s*(\d{1,2})\s*\)\s*/ig;
-  let pm;
-  while((pm=parenMix.exec(combined))) {
-    const lo=Number(pm[1]),hi=Number(pm[2]);
-    if(lo>=4 && hi>=lo && hi<=30 && hi-lo>=1) sizes.push({kind:"mix",min:lo,max:hi,label:`Mix ${lo}-${hi}mm`});
-  }
-  // Unidade só é tamanho unitário quando o número NÃO faz parte de uma faixa
-  // como 7-13MM / 8-14MM. Isso evita criar falsamente "13mm" a partir de um MIX.
-  const unitRe=/(?<![\d-–—])\b(\d{1,2})\s*MM\b/ig;
-  let u;
-  while((u=unitRe.exec(combined))) {
-    const n=Number(u[1]);
-    if(n>=4 && n<=30) sizes.push({kind:"unit",min:n,max:n,label:`${n}mm`});
-  }
-  // Também aceita campos de tamanho/grade vindos diretamente do Bling.
-  const direct=[p?.tamanho,p?.comprimento,p?.size,p?.raw?.tamanho,p?.raw?.comprimento,p?.raw?.size].filter(v=>v!==undefined&&v!==null).map(blingText).join(" ");
-  const directMix=direct.match(/(\d{1,2})\s*(?:-|–|—|a|até|to)\s*(\d{1,2})\s*MM/i);
-  if(directMix) sizes.push({kind:"mix",min:Number(directMix[1]),max:Number(directMix[2]),label:`Mix ${directMix[1]}-${directMix[2]}mm`});
-  const directUnits=direct.match(/(?<![\d-–—])\b\d{1,2}\s*MM\b/ig)||[];
-  directUnits.forEach(x=>{const n=Number(x);if(n>=4&&n<=30)sizes.push({kind:"unit",min:n,max:n,label:`${n}mm`});});
-  const uniqueSizes=[];sizes.sort((a,b)=>a.min-b.min||a.max-b.max).forEach(x=>{if(!uniqueSizes.some(y=>y.label.toLowerCase()===x.label.toLowerCase()))uniqueSizes.push(x);});
-  uniqueSizes.forEach(x=>add("Tamanho",x.label));
-
-  // Curvatura: lê tanto "CURVATURA D" quanto descrições abreviadas do Bling.
-  let cv;
-  const cvRe=/(?:CURVATURA|CURV\.?|CURVA(?:TURA)?)[\s:=-]*(CC|DD|L\+|J|B|C|D|L|M)\b/i;
-  cv=combined.match(cvRe);
-  if(!cv){
-    const tail=combined.match(/\b0[.,]\d{2}\s*(CC|DD|L\+|J|B|C|D|L|M)\b/i); if(tail)cv=tail;
-  }
-  if(cv)add("Curvatura",cv[1].toUpperCase());
-
-  // Espessura: captura 0.03 ... 0.20, inclusive formatos "0.07D".
-  const th=[]; const thRe=/\b0[.,](03|04|05|06|07|08|10|12|15|18|20)\s*(?:MM)?\s*(?:[A-Z])?\b/ig; let t;
-  while((t=thRe.exec(combined))) th.push(`0.${t[1]}`);
-  // Alguns cadastros trazem a espessura na descrição como "0.07" sem palavra-chave.
-  [...new Set(th)].forEach(x=>add("Espessura",x));
-
-  // Volumes especiais. "3D duplo" corresponde ao produto 6D; "4D duplo" ao 8D.
-  const vol=[];
-  const volRe=/\b(\d+D)\s*\(\s*(\d+D)\s+DUPLO\s*\)/ig;let vv;
-  while((vv=volRe.exec(combined)))vol.push(`${vv[1].toUpperCase()} (${vv[2].toUpperCase()} Duplo)`);
-  if(!vol.length && model.match(/\b\d+D\b/i)){const vm=model.match(/\b\d+D\b/i);if(vm)vol.push(vm[0].toUpperCase());}
-  if(vol.length) [...new Set(vol)].forEach(x=>add("Volume",x));
-
-  // Somente Marrom é tratada como cor de cílios. Pink/Rosa não vira opção.
-  if(marrom)add("Cor","Marrom");
-
-  // Descrição padronizada com os dados reais encontrados no Bling, sem criar informação.
-  const info=[];
-  if(out.Curvatura?.length)info.push(`Curvatura: ${out.Curvatura.join(" / ")}`);
-  if(out.Espessura?.length)info.push(`Espessura: ${out.Espessura.join(" / ")}`);
-  if(out.Tamanho?.length)info.push(`Tamanho: ${out.Tamanho.join(" / ")}`);
-  if(out.Volume?.length)info.push(`Volume: ${out.Volume.join(" / ")}`);
-  if(marrom)info.push("Cor: Marrom");
-
-  // Nome: Cílios + marca + fio/modelo + Marrom quando aplicável.
-  const nameParts=["Cílios",brand,model];
-  if(marrom)nameParts.push("Marrom");
-  const canonicalName=nameParts.filter(Boolean).join(" ").replace(/\s+/g," ").trim();
-  const displayName=formatLashFullName(rawName||canonicalName);
-  const groupKey=slug([brandKeyResolved||brand,model,marrom?"marrom":"normal"].join("|"));
-  return {isActualLash:true,brandKey:brandKeyResolved||"",brand,model,marrom,displayName,canonicalName,groupKey,variations:Object.fromEntries(Object.entries(out).map(([k,v])=>[k,[...new Set(v)]])),infoLine:info.join(" · "),hasPink};
-}
-
 function normalizeBlingProduct(p){
   const estoque=Number(p?.estoque?.saldoVirtualTotal ?? p?.estoque?.saldoFisicoTotal ?? p?.estoque?.saldo ?? p?.saldoVirtual ?? p?.saldo ?? 0);
   const price=Number(p?.preco ?? p?.precoVenda ?? p?.precoVendaVarejo ?? 0);
+  const name=formatProductName(p?.nome ?? p?.descricao ?? "Produto");
   const area=classifyArea(p); const category=classifySubcategory(p,area);
   const imageUrls=imageCandidates(p);
   const rawBrand=p?.marca?.descricao||p?.marca?.nome||((typeof p?.marca==="string")?p.marca:"");
   const fallback=safeImageFallback();
-  const rawName=p?.nome ?? p?.descricao ?? "Produto";
-  const lash=isActualLashProduct(p) ? normalizeLashAttributes(p) : null;
-  const name=lash ? (lash.displayName || formatLashFullName(rawName)) : formatProductName(rawName);
   const image=productImageFor(name, imageUrls[0]||"", rawBrand, fallback);
-  const sourceText=[rawName,p?.descricao,p?.descricaoCurta,p?.categoria?.descricao,p?.categoria?.nome].filter(Boolean).join(" ");
-  const brandKeyResolved=lash?.brandKey || canonicalBrandKey(rawBrand)||inferBrandFromText(sourceText);
-  const brand=lash?.brand || (brandKeyResolved ? displayBrand(brandKeyResolved) : "");
-  const descBase=productDescriptionFromRaw(p,"Produto integrado ao catálogo Relpps.");
-  const description=lash?.infoLine ? `${descBase}\n\n${lash.infoLine}` : descBase;
-  const variations=lash?.variations || extractVariationObject(p);
-  if(lash){
-    // Pink/Rosa nunca vira opção de cílios. Marrom permanece disponível para o filtro.
-    if(Array.isArray(variations.Cor)) variations.Cor=variations.Cor.filter(v=>slug(v)==="marrom");
-    if(!variations.Cor?.length) delete variations.Cor;
-  }
-  return {
-    id:String(p.id),name,area,category,price,stock:estoque,brand,image,images:imageUrls.length?imageUrls:[image],
-    description,variations,variationItems:[],parentId:getParentId(p),raw:p,
-    isActualLash:!!lash,lashModel:lash?.model||"",lashGroupKey:lash?.groupKey||"",lashInfo:lash||null,
-    displayBaseName:name
-  };
+  const sourceText=[name,p?.descricao,p?.descricaoCurta,p?.categoria?.descricao,p?.categoria?.nome].filter(Boolean).join(" ");
+  const brandKeyResolved=canonicalBrandKey(rawBrand)||inferBrandFromText(sourceText);
+  const suffixBrand=extractBrandSuffixCandidate(p?.nome||p?.descricao||"");
+  // Prioridade: marca oficial do Bling > marca conhecida no texto > marca no final do nome após "-".
+  const brand=brandKeyResolved ? displayBrand(brandKeyResolved) : "";
+  return {id:String(p.id),name,area,category,price,stock:estoque,brand,image,images:imageUrls.length?imageUrls:[image],description:productDescriptionFromRaw(p,"Produto integrado ao catálogo Relpps."),variations:{},variationItems:[],parentId:getParentId(p),raw:p};
 }
-
 
 function makeVariationItem(item,parentName){
   const inferred=inferNameVariation(item.name,item.area);
-  const normalizedVars={};
-
-  // CÍLIOS: cada SKU/variação precisa ser analisado pelo PRÓPRIO nome do Bling.
-  // Não podemos copiar item.variations inteiro, porque um produto agrupado pode
-  // ter "Tamanho: [7mm, 8mm, 9mm...]" e isso faria um SKU de 7mm parecer também 13mm.
-  if(item?.isActualLash){
-    const lashRaw=item?.raw && typeof item.raw==="object" ? item.raw : item;
-    const lashAttrs=normalizeLashAttributes(lashRaw);
-    Object.entries(lashAttrs?.variations||{}).forEach(([k,values])=>{
-      const arr=Array.isArray(values)?values:[values];
-      const clean=arr.map(v=>String(v??"").trim()).filter(Boolean);
-      if(clean.length) normalizedVars[titleVariationName(k)]=clean[0];
-    });
-    // Campos explícitos do SKU no Bling têm prioridade quando o nome não trouxe
-    // determinada característica.
-    if(item?.variations && typeof item.variations==="object") Object.entries(item.variations).forEach(([k,values])=>{
-      const key=titleVariationName(k);
-      if(normalizedVars[key]) return;
-      const arr=Array.isArray(values)?values:[values];
-      const clean=arr.map(v=>String(v??"").trim()).filter(Boolean);
-      if(clean.length===1) normalizedVars[key]=clean[0];
-    });
-  } else if(item?.variations && typeof item.variations==="object") {
-    Object.entries(item.variations).forEach(([k,values])=>{
-      const arr=Array.isArray(values)?values:[values];
-      const clean=arr.map(v=>String(v??"").trim()).filter(Boolean);
-      if(clean.length) normalizedVars[titleVariationName(k)]=clean[0];
-    });
-  }
-
-  const attrs=Object.keys(normalizedVars).length ? normalizedVars : extractVariationObject(item);
-  const label=Object.entries(attrs).map(([k,v])=>`${k}: ${v}`).join(" • ") || variationLabel(item,parentName);
-  return {id:item.id,label,price:Number(item.price)||0,stock:Number(item.stock)||0,variations:attrs,image:item.image,base:inferred.base,rawName:item?.raw?.nome||item?.name||""};
+  return {id:item.id,label:variationLabel(item,parentName),price:Number(item.price)||0,stock:Number(item.stock)||0,variations:extractVariationObject(item),image:item.image,base:inferred.base};
 }
 function buildVariationGroups(items){
   const groups={};
@@ -661,9 +470,7 @@ function makeGroupedProduct(items, preferredParent=null){
   const ordered=[...items].sort((a,b)=>(Number(b.stock)||0)-(Number(a.stock)||0));
   const lead=preferredParent||ordered[0];
   const info=inferNameVariation(lead.name,lead.area);
-  // Para cílios, o nome exibido permanece exatamente o nome cadastrado no Bling.
-  // As características (tamanho, curvatura, volume etc.) continuam como opções.
-  const baseName=lead.isActualLash ? formatLashFullName(lead.raw?.nome||lead.name||lead.displayBaseName||"Cílios") : formatProductName(cleanVariantName(info.base)||lead.name);
+  const baseName=formatProductName(cleanVariantName(info.base)||lead.name);
   const variationItems=ordered.map(x=>makeVariationItem(x,baseName));
   const groups=sortVariationGroups(buildVariationGroups(variationItems));
   if(!Object.keys(groups).length) return null;
@@ -716,7 +523,6 @@ function applyProductSource(rawProducts, sourceLabel="catálogo"){
   rebuildAreaFilter();
   rebuildCategoryFilter();
   rebuildBrandFilter();
-  rebuildLashAttributeFilters();
   /* Produtos com foto ficam sempre antes dos que ainda aguardam imagem no Bling. */
   products.sort((a,b)=>{
     const ah=Array.isArray(a.images)&&a.images.some(x=>String(x||"").trim()&&!String(x).startsWith("data:image"));
@@ -821,101 +627,22 @@ function productSearchText(p){
   return slug(raw).replace(/[^a-z0-9]+/g," ").trim();
 }
 
-function lashCatalogActive(){
-  return slug(currentArea)==="cilios" || slug(currentCategory)==="cilios";
-}
-function productHasVariationValue(p,key,selected){
-  if(!selected) return true;
-  const target=slug(selected);
-
-  // Em cílios, o filtro deve olhar os SKUs/variações individuais, nunca a lista
-  // agregada do produto-pai. Assim um produto com 7mm + 8mm + 13mm não passa
-  // no filtro de 13mm por engano só porque o pai contém todos os tamanhos.
-  if(p?.isActualLash && Array.isArray(p?.variationItems) && p.variationItems.length){
-    return p.variationItems.some(item=>{
-      const value=item?.variations?.[key];
-      const vals=Array.isArray(value)?value:[value];
-      return vals.some(v=>slug(v)===target);
-    });
-  }
-
-  const values=Array.isArray(p?.variations?.[key]) ? p.variations[key] : (p?.variations?.[key]!=null ? [p.variations[key]] : []);
-  return values.some(v=>slug(v)===target);
-}
-function matchesCatalogBase(p){
-  if(isForbiddenStorefrontProduct(p?.raw||p)) return false;
-  const area=slug(currentArea), cat=slug(currentCategory), brand=canonicalBrandKey(currentBrand);
-  const areaOk=!area || slug(p?.area)===area;
-  const isKit=/\bkit\b|\bcombo\b|\bset\b/.test(slug(`${p?.name||""} ${p?.category||""}`));
-  const lashAreaOk=area!=="cilios" && cat!=="cilios" || !!p?.isActualLash;
-  const catOk=!cat || (cat==="kits" ? isKit : slug(p?.category)===cat);
-  const brandText=canonicalBrandKey(p?.brand)||inferBrandFromText([p?.name,p?.description].filter(Boolean).join(" "));
-  const brandOk=!brand || (!!brandText && brandText===brand);
-  if(!areaOk || !lashAreaOk || !catOk || !brandOk) return false;
-  const q=slug(currentSearch).replace(/[^a-z0-9]+/g," ").trim();
-  if(!q) return true;
-  const terms=q.split(/\s+/).filter(Boolean);
-  const text=productSearchText(p), phrase=terms.join(" ");
-  return text.includes(phrase) || terms.every(term=>text.includes(term));
-}
-function lashItemMatchesFilters(item){
-  const size=slug(window.RELPPS_CATALOG_SIZE_FILTER||"");
-  const volume=slug(window.RELPPS_CATALOG_VOLUME_FILTER||"");
-  const curvature=slug(window.RELPPS_CATALOG_CURVATURE_FILTER||"");
-  const color=slug(window.RELPPS_CATALOG_COLOR_FILTER||"");
-  const vars=item?.variations||{};
-  const has=(key,val)=>!val || slug(vars[key]||"")===val;
-  return has("Tamanho",size)&&has("Volume",volume)&&has("Curvatura",curvature)&&has("Cor",color);
-}
-function restrictLashProductToFilters(p){
-  if(!lashCatalogActive() || !p?.isActualLash || !p?.variationItems?.length) return p;
-  const active=Object.values({size:window.RELPPS_CATALOG_SIZE_FILTER,volume:window.RELPPS_CATALOG_VOLUME_FILTER,curvature:window.RELPPS_CATALOG_CURVATURE_FILTER,color:window.RELPPS_CATALOG_COLOR_FILTER}).some(Boolean);
-  if(!active) return p;
-  const items=p.variationItems.filter(lashItemMatchesFilters);
-  if(!items.length) return null;
-  const groups=sortVariationGroups(buildVariationGroups(items));
-  const selectedSize=slug(window.RELPPS_CATALOG_SIZE_FILTER||"");
-  const selectedVolume=slug(window.RELPPS_CATALOG_VOLUME_FILTER||"");
-  const selectedCurvature=slug(window.RELPPS_CATALOG_CURVATURE_FILTER||"");
-  const selectedColor=slug(window.RELPPS_CATALOG_COLOR_FILTER||"");
-  const hasExactFilter=!!(selectedSize||selectedVolume||selectedCurvature||selectedColor);
-  // Quando existe filtro ativo, o nome do card passa a vir do SKU que realmente
-  // passou no filtro. Isso impede que um card filtrado em 13mm continue mostrando
-  // no título o "12mm" de outro SKU que foi usado como produto-pai.
-  const leadFiltered=items[0];
-  const filteredName=hasExactFilter && leadFiltered?.rawName
-    ? formatLashFullName(leadFiltered.rawName)
-    : p.name;
-  return {...p,name:filteredName,variationItems:items,variations:groups,stock:items.reduce((sum,x)=>sum+Math.max(0,Number(x.stock)||0),0),price:items.reduce((min,x)=>Math.min(min,Number(x.price)||min),Number.POSITIVE_INFINITY)};
-}
 function filteredProducts(){
-  const size=slug(window.RELPPS_CATALOG_SIZE_FILTER||"");
-  const volume=slug(window.RELPPS_CATALOG_VOLUME_FILTER||"");
-  const curvature=slug(window.RELPPS_CATALOG_CURVATURE_FILTER||"");
-  const color=slug(window.RELPPS_CATALOG_COLOR_FILTER||"");
-  return products.map(p=>{
-    if(!matchesCatalogBase(p)) return null;
-    if(lashCatalogActive() && !p?.isActualLash) return null;
-    const sizeOk=!size || productHasVariationValue(p,"Tamanho",size);
-    const volumeOk=!volume || productHasVariationValue(p,"Volume",volume);
-    const curvatureOk=!curvature || productHasVariationValue(p,"Curvatura",curvature);
-    const colorOk=!color || productHasVariationValue(p,"Cor",color) || (color==="marrom"&&/\bmarrom\b|\bbrown\b/.test(slug(p?.name||"")));
-    if(!(sizeOk&&volumeOk&&curvatureOk&&colorOk)) return null;
-    return restrictLashProductToFilters(p);
-  }).filter(Boolean);
-}
-function lashFilterPool(exclude=""){
-  if(!lashCatalogActive()) return [];
-  const size=exclude==="size" ? "" : slug(window.RELPPS_CATALOG_SIZE_FILTER||"");
-  const volume=exclude==="volume" ? "" : slug(window.RELPPS_CATALOG_VOLUME_FILTER||"");
-  const curvature=exclude==="curvature" ? "" : slug(window.RELPPS_CATALOG_CURVATURE_FILTER||"");
-  const color=exclude==="color" ? "" : slug(window.RELPPS_CATALOG_COLOR_FILTER||"");
+  const q=slug(currentSearch).replace(/[^a-z0-9]+/g," ").trim();
+  const terms=q.split(/\s+/).filter(Boolean);
+  const area=slug(currentArea), cat=slug(currentCategory), brand=canonicalBrandKey(currentBrand);
   return products.filter(p=>{
-    if(!matchesCatalogBase(p) || !p?.isActualLash) return false;
-    return (!size || productHasVariationValue(p,"Tamanho",size)) &&
-      (!volume || productHasVariationValue(p,"Volume",volume)) &&
-      (!curvature || productHasVariationValue(p,"Curvatura",curvature)) &&
-      (!color || productHasVariationValue(p,"Cor",color) || (color==="marrom"&&/\bmarrom\b|\bbrown\b/.test(slug(p?.name||""))));
+    if(isForbiddenStorefrontProduct(p?.raw||p)) return false;
+    const areaOk=!area || slug(p?.area)===area;
+    const isKit=/\bkit\b|\bcombo\b|\bset\b/.test(slug(`${p?.name||""} ${p?.category||""}`));
+    const catOk=!cat || (cat==="kits" ? isKit : slug(p?.category)===cat);
+    const brandText=canonicalBrandKey(p?.brand)||inferBrandFromText([p?.name,p?.description].filter(Boolean).join(" "));
+    // Marca é comparação exata por chave canônica. Não usa "includes", para nunca misturar marcas parecidas.
+    const brandOk=!brand || (!!brandText && brandText===brand);
+    if(!areaOk || !catOk || !brandOk) return false;
+    if(!terms.length) return true;
+    const text=productSearchText(p), phrase=terms.join(" ");
+    return text.includes(phrase) || terms.every(term=>text.includes(term));
   });
 }
 
@@ -959,13 +686,6 @@ function rebuildBrandFilter(){
 
 function rebuildCategoryFilter(){
   const select=$("#categoryFilter"); if(!select)return;
-  // Cílios é uma categoria própria: ao selecionar a área Cílios, não oferecemos Colas/Finalizadores/Acessórios nessa mesma lista.
-  if(slug(currentArea)==="cilios"){
-    select.innerHTML='<option value="">Todos os cílios</option><option value="cílios">Cílios</option>';
-    if(currentCategory!=="cílios") currentCategory="";
-    select.value=currentCategory||"";
-    return;
-  }
   const preferred=["Géis","Colas","Preparadores","Esmaltes","Top Coat","Finalizadores","Higienizadores","Ferramentas","Kits","Combos","Cílios","Henna","Laminação","Sobrancelhas"];
   const actual=products.map(p=>String(p?.category||"").trim()).filter(Boolean);
   const cats=[...new Map([...preferred,...actual].map(name=>[slug(name),name])).values()];
@@ -973,62 +693,6 @@ function rebuildCategoryFilter(){
   select.value=currentCategory||"";
 }
 
-function setLashFilterVisibility(){
-  const active=lashCatalogActive();
-  ["sizeFilter","volumeFilter","curvatureFilter","colorFilter"].forEach(id=>{
-    const el=document.getElementById(id); if(!el) return;
-    el.classList.toggle("lash-only-filter",true);
-    el.hidden=!active;
-    el.setAttribute("aria-hidden",active?"false":"true");
-  });
-}
-function rebuildLashAttributeFilters(){
-  const sizeSelect=$("#sizeFilter"), volumeSelect=$("#volumeFilter"), curvatureSelect=$("#curvatureFilter"), colorSelect=$("#colorFilter");
-  setLashFilterVisibility();
-  if(!lashCatalogActive()){
-    if(sizeSelect) sizeSelect.innerHTML='<option value="">Tamanho</option>';
-    if(volumeSelect) volumeSelect.innerHTML='<option value="">Volume</option>';
-    if(curvatureSelect) curvatureSelect.innerHTML='<option value="">Curvatura</option>';
-    if(colorSelect) colorSelect.innerHTML='<option value="">Cor</option>';
-    return;
-  }
-  const collect=(pool,key)=>{
-    const values=[]; const add=(v)=>{if(v!=null&&String(v).trim()&&!values.some(x=>slug(x)===slug(v)))values.push(String(v).trim())};
-    pool.forEach(p=>{
-      if(p?.isActualLash && Array.isArray(p?.variationItems) && p.variationItems.length){
-        p.variationItems.forEach(item=>{
-          const raw=item?.variations?.[key];
-          (Array.isArray(raw)?raw:[raw]).forEach(add);
-        });
-      }else{
-        const raw=p?.variations?.[key];
-        (Array.isArray(raw)?raw:[raw]).forEach(add);
-      }
-    });
-    return values;
-  };
-  const sizeSort=(a,b)=>{
-    const pa=slug(a).match(/(\d+)[-–](\d+)/),pb=slug(b).match(/(\d+)[-–](\d+)/);
-    if(pa&&pb)return Number(pa[1])-Number(pb[1])||Number(pa[2])-Number(pb[2]);
-    if(pa)return -1;if(pb)return 1;
-    return Number(slug(a).match(/\d+/)?.[0]||999)-Number(slug(b).match(/\d+/)?.[0]||999);
-  };
-  const volumeSort=(a,b)=>Number(slug(a).match(/\d+/)?.[0]||999)-Number(slug(b).match(/\d+/)?.[0]||999)||a.localeCompare(b,"pt-BR");
-  const fill=(select,placeholder,values,selected)=>{
-    if(!select)return;
-    select.innerHTML=`<option value="">${placeholder}</option>`+values.map(v=>`<option value="${slug(v)}">${v}</option>`).join("");
-    select.value=values.some(v=>slug(v)===selected)?selected:"";
-  };
-  const size=slug(window.RELPPS_CATALOG_SIZE_FILTER||""), volume=slug(window.RELPPS_CATALOG_VOLUME_FILTER||""), curvature=slug(window.RELPPS_CATALOG_CURVATURE_FILTER||""), color=slug(window.RELPPS_CATALOG_COLOR_FILTER||"");
-  const sizes=collect(lashFilterPool("size"),"Tamanho").sort(sizeSort);
-  const volumes=collect(lashFilterPool("volume"),"Volume").sort(volumeSort);
-  const curvatures=collect(lashFilterPool("curvature"),"Curvatura").sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  const colors=collect(lashFilterPool("color"),"Cor").filter(v=>slug(v)==="marrom").sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  fill(sizeSelect,"Todos os tamanhos",sizes,size);
-  fill(volumeSelect,"Todos os volumes",volumes,volume);
-  fill(curvatureSelect,"Todas as curvaturas",curvatures,curvature);
-  fill(colorSelect,"Todas as cores",colors,color);
-}
 function rebuildAreaFilter(){
   const select=$("#areaFilter"); if(!select)return;
   const areas=["Unhas","Cílios","Sobrancelhas","Equipamentos"];
@@ -2462,9 +2126,7 @@ function openFunnel(area){
 }
 function closeFunnel(){ $("#funnelCategorias")?.classList.remove("active"); $("#funnelClose")?.classList.add("hidden"); }
 function openCatalogPage(area="",category="",search="",brand=""){
-  currentArea=area||""; currentCategory=category||""; currentBrand=brand||""; currentSearch=search||"";
-  window.RELPPS_CATALOG_SIZE_FILTER="";window.RELPPS_CATALOG_VOLUME_FILTER="";window.RELPPS_CATALOG_CURVATURE_FILTER="";window.RELPPS_CATALOG_COLOR_FILTER="";
-  rebuildCategoryFilter();rebuildLashAttributeFilters(); resetCatalogPage();
+  currentArea=area||""; currentCategory=category||""; currentBrand=brand||""; currentSearch=search||""; resetCatalogPage();
   if($("#searchInput")) $("#searchInput").value=currentSearch;
   if($("#catalogSearch")) $("#catalogSearch").value=currentSearch;
   renderProducts();
@@ -2536,16 +2198,12 @@ function bindEvents(){
   $("#searchInput").addEventListener("keydown",e=>{if(e.key==="Enter")runSearch()});
   $("#catalogSearch").addEventListener("input",()=>{currentSearch=$("#catalogSearch").value;$("#searchInput").value=currentSearch;resetCatalogPage();renderProducts()});
   $("#catalogSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();openCatalogPage(currentArea,currentCategory,$("#catalogSearch").value.trim())}});
-  $("#areaFilter").addEventListener("change",e=>{currentArea=e.target.value;currentCategory="";currentSearch="";window.RELPPS_CATALOG_SIZE_FILTER="";window.RELPPS_CATALOG_VOLUME_FILTER="";window.RELPPS_CATALOG_CURVATURE_FILTER="";window.RELPPS_CATALOG_COLOR_FILTER="";$("#searchInput").value="";$("#catalogSearch").value="";resetCatalogPage();rebuildCategoryFilter();rebuildLashAttributeFilters();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
+  $("#areaFilter").addEventListener("change",e=>{currentArea=e.target.value;currentCategory="";currentSearch="";$("#searchInput").value="";$("#catalogSearch").value="";resetCatalogPage();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
   $("#categoryFilter").addEventListener("change",e=>{currentCategory=e.target.value;currentSearch="";$("#searchInput").value="";$("#catalogSearch").value="";resetCatalogPage();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
   $("#brandFilter").addEventListener("change",e=>{currentBrand=canonicalBrandKey(e.target.value);currentSearch="";$("#searchInput").value="";$("#catalogSearch").value="";resetCatalogPage();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
-  $("#sizeFilter")?.addEventListener("change",e=>{window.RELPPS_CATALOG_SIZE_FILTER=e.target.value||"";resetCatalogPage();rebuildLashAttributeFilters();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
-  $("#volumeFilter")?.addEventListener("change",e=>{window.RELPPS_CATALOG_VOLUME_FILTER=e.target.value||"";resetCatalogPage();rebuildLashAttributeFilters();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
-  $("#curvatureFilter")?.addEventListener("change",e=>{window.RELPPS_CATALOG_CURVATURE_FILTER=e.target.value||"";resetCatalogPage();rebuildLashAttributeFilters();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
-  $("#colorFilter")?.addEventListener("change",e=>{window.RELPPS_CATALOG_COLOR_FILTER=e.target.value||"";resetCatalogPage();rebuildLashAttributeFilters();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))});
   $$(".catalog-chip").forEach(chip=>chip.addEventListener("click",()=>{openCatalogPage(chip.dataset.filterArea||"",chip.dataset.filterCategory||"")}));
   document.addEventListener("click",(event)=>{const btn=event.target.closest("[data-brand-filter]");if(!btn)return;currentBrand=canonicalBrandKey(btn.dataset.brandFilter||"");currentSearch="";if($("#searchInput"))$("#searchInput").value="";openCatalogPage("","","",currentBrand);});
-  $("#clearFilter").onclick=()=>{currentArea="";currentCategory="";currentBrand="";currentSearch="";window.RELPPS_CATALOG_SIZE_FILTER="";window.RELPPS_CATALOG_VOLUME_FILTER="";window.RELPPS_CATALOG_CURVATURE_FILTER="";window.RELPPS_CATALOG_COLOR_FILTER="";$("#searchInput").value="";$("#catalogSearch").value="";resetCatalogPage();rebuildCategoryFilter();rebuildLashAttributeFilters();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))};
+  $("#clearFilter").onclick=()=>{currentArea="";currentCategory="";currentBrand="";currentSearch="";$("#searchInput").value="";$("#catalogSearch").value="";resetCatalogPage();renderProducts();scheduleImageHydration(filteredProducts().slice(0,14))};
   $("#modalAdd").onclick=()=>{if(activeProduct){addToCart(activeProduct.id,selectedVariations);closeModal("productModal");openCart()}};
   $("#cartButton").onclick=openCart;$("#floatingCart").onclick=openCart;$("#closeCart").onclick=closeCart;$("#drawerBackdrop").onclick=closeCart;$("#checkoutButton").onclick=openCartPage;
   $("#cartPageBack")?.addEventListener("click",closeCartPage);

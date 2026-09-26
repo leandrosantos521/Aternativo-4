@@ -244,18 +244,6 @@
           <option value="laminação">Laminação</option>
           <option value="sobrancelhas">Sobrancelhas</option>
         </select>
-        <select id="sizeFilter" class="lash-only-filter" aria-label="Filtrar por tamanho" hidden>
-          <option value="">Todos os tamanhos</option>
-        </select>
-        <select id="volumeFilter" class="lash-only-filter" aria-label="Filtrar por volume" hidden>
-          <option value="">Todos os volumes</option>
-        </select>
-        <select id="curvatureFilter" class="lash-only-filter" aria-label="Filtrar por curvatura" hidden>
-          <option value="">Todas as curvaturas</option>
-        </select>
-        <select id="colorFilter" class="lash-only-filter" aria-label="Filtrar por cor" hidden>
-          <option value="">Todas as cores</option>
-        </select>
         <select id="brandFilter" aria-label="Escolher marca">
           <option value="">Todas as marcas</option>
           <option value="badpink">Bad Pink</option>
